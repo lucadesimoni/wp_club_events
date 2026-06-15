@@ -7,6 +7,7 @@ class CE_Shortcodes {
         add_shortcode( 'club_events_timeline', [ $this, 'timeline' ] );
         add_shortcode( 'club_events_overview', [ $this, 'overview' ] );
         add_shortcode( 'club_events_list', [ $this, 'list_view' ] );
+        add_shortcode( 'club_events_cards', [ $this, 'cards' ] );
         add_shortcode( 'club_events_subscribe', [ $this, 'subscribe_form' ] );
 
         add_action( 'init', [ $this, 'register_blocks' ] );
@@ -33,6 +34,19 @@ class CE_Shortcodes {
             'attributes'      => [
                 'category'    => [ 'type' => 'string', 'default' => '' ],
                 'show_filter' => [ 'type' => 'boolean', 'default' => true ],
+            ],
+            'editor_script'   => 'club-events-blocks',
+        ] );
+
+        register_block_type( 'club-events/cards', [
+            'render_callback' => [ $this, 'cards' ],
+            'attributes'      => [
+                'category'    => [ 'type' => 'string',  'default' => '' ],
+                'limit'       => [ 'type' => 'number',  'default' => 6 ],
+                'columns'     => [ 'type' => 'number',  'default' => 3 ],
+                'show_past'   => [ 'type' => 'boolean', 'default' => false ],
+                'show_filter' => [ 'type' => 'boolean', 'default' => true ],
+                'show_image'  => [ 'type' => 'boolean', 'default' => true ],
             ],
             'editor_script'   => 'club-events-blocks',
         ] );
@@ -349,6 +363,157 @@ class CE_Shortcodes {
             }
             echo '</ul>';
         }
+        return ob_get_clean();
+    }
+
+    public function cards( $atts = [], $content = '' ) {
+        $atts = is_array( $atts ) ? $atts : [];
+        $atts = shortcode_atts( [
+            'category'    => '',
+            'limit'       => 6,
+            'columns'     => 3,
+            'show_past'   => false,
+            'show_filter' => true,
+            'show_image'  => true,
+        ], $atts, 'club_events_cards' );
+
+        $cols = max( 1, min( 4, (int) $atts['columns'] ) );
+
+        $query_args = [ 'posts_per_page' => (int) $atts['limit'] ];
+        if ( ! $atts['show_past'] ) {
+            $query_args['from'] = date( 'Y-m-d H:i:s' );
+        }
+        if ( $atts['category'] ) {
+            $query_args['tax_query'] = [ [
+                'taxonomy' => 'event_category',
+                'field'    => 'slug',
+                'terms'    => sanitize_text_field( $atts['category'] ),
+            ] ];
+        }
+
+        $posts      = CE_CPT::get_events( $query_args );
+        $events     = array_map( fn( $p ) => CE_CPT::format_event( $p->ID ), $posts );
+        $categories = get_terms( [ 'taxonomy' => 'event_category', 'hide_empty' => true ] );
+
+        ob_start();
+        ?>
+        <div class="ce-cards-wrap" data-ce-component="cards" style="--ce-cols:<?php echo esc_attr( $cols ); ?>">
+
+            <?php if ( ! empty( $atts['show_filter'] ) && ! is_wp_error( $categories ) && count( $categories ) > 1 ) : ?>
+            <div class="ce-filter-bar">
+                <button class="ce-filter-btn active" data-category=""><?php esc_html_e( 'All', 'club-events' ); ?></button>
+                <?php foreach ( $categories as $cat ) : ?>
+                <button class="ce-filter-btn" data-category="<?php echo esc_attr( $cat->slug ); ?>">
+                    <?php echo esc_html( $cat->name ); ?>
+                </button>
+                <?php endforeach; ?>
+            </div>
+            <?php endif; ?>
+
+            <?php if ( empty( $events ) ) : ?>
+            <p class="ce-empty"><?php esc_html_e( 'No upcoming events.', 'club-events' ); ?></p>
+            <?php else : ?>
+            <div class="ce-cards-grid">
+                <?php foreach ( $events as $event ) :
+                    $start_ts   = $event['start'] ? strtotime( $event['start'] ) : null;
+                    $end_ts     = $event['end']   ? strtotime( $event['end'] )   : null;
+                    $month      = $start_ts ? date_i18n( 'M', $start_ts ) : '';
+                    $day        = $start_ts ? date_i18n( 'j', $start_ts ) : '';
+                    $weekday    = $start_ts ? date_i18n( 'l', $start_ts ) : '';
+                    $time_start = ( $start_ts && ! $event['allDay'] ) ? date_i18n( get_option( 'time_format' ), $start_ts ) : '';
+                    $time_end   = ( $end_ts   && ! $event['allDay'] ) ? date_i18n( get_option( 'time_format' ), $end_ts )   : '';
+                    $cat_slugs  = implode( ' ', array_column( $event['categories'], 'slug' ) );
+                ?>
+                <article class="ce-card-item"
+                         data-category="<?php echo esc_attr( $cat_slugs ); ?>"
+                         style="--ce-color:<?php echo esc_attr( $event['color'] ); ?>">
+
+                    <a href="<?php echo esc_url( $event['url'] ); ?>" class="ce-card-inner">
+
+                        <?php if ( ! empty( $atts['show_image'] ) && $event['thumbnail'] ) : ?>
+                        <div class="ce-card-img">
+                            <img src="<?php echo esc_url( $event['thumbnail'] ); ?>"
+                                 alt="<?php echo esc_attr( $event['title'] ); ?>"
+                                 loading="lazy">
+                            <?php if ( ! empty( $event['categories'] ) ) : ?>
+                            <div class="ce-card-cats">
+                                <?php foreach ( $event['categories'] as $cat ) : ?>
+                                <span class="ce-category-badge"><?php echo esc_html( $cat['name'] ); ?></span>
+                                <?php endforeach; ?>
+                            </div>
+                            <?php endif; ?>
+                        </div>
+                        <?php elseif ( ! empty( $atts['show_image'] ) ) : ?>
+                        <div class="ce-card-img ce-card-img--placeholder">
+                            <div class="ce-card-placeholder-inner" style="background:linear-gradient(135deg,<?php echo esc_attr( $event['color'] ); ?> 0%,<?php echo esc_attr( $event['color'] ); ?>aa 100%)">
+                                <svg viewBox="0 0 48 48" width="40" height="40" fill="none">
+                                    <rect x="6" y="8" width="36" height="36" rx="4" stroke="rgba(255,255,255,.7)" stroke-width="2"/>
+                                    <path d="M16 6v6M32 6v6M6 20h36" stroke="rgba(255,255,255,.7)" stroke-width="2" stroke-linecap="round"/>
+                                    <rect x="14" y="26" width="8" height="8" rx="1" fill="rgba(255,255,255,.5)"/>
+                                </svg>
+                            </div>
+                            <?php if ( ! empty( $event['categories'] ) ) : ?>
+                            <div class="ce-card-cats">
+                                <?php foreach ( $event['categories'] as $cat ) : ?>
+                                <span class="ce-category-badge"><?php echo esc_html( $cat['name'] ); ?></span>
+                                <?php endforeach; ?>
+                            </div>
+                            <?php endif; ?>
+                        </div>
+                        <?php endif; ?>
+
+                        <div class="ce-card-body">
+                            <?php if ( $start_ts ) : ?>
+                            <div class="ce-card-date-badge">
+                                <span class="ce-card-date-day"><?php echo esc_html( $day ); ?></span>
+                                <span class="ce-card-date-month"><?php echo esc_html( $month ); ?></span>
+                            </div>
+                            <?php endif; ?>
+
+                            <h3 class="ce-card-title"><?php echo esc_html( $event['title'] ); ?></h3>
+
+                            <div class="ce-card-meta">
+                                <?php if ( $weekday && $time_start ) : ?>
+                                <div class="ce-card-meta-row">
+                                    <svg viewBox="0 0 16 16" width="13" height="13" fill="none"><circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.2"/><path d="M8 4.5V8l2.5 1.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+                                    <span><?php echo esc_html( $weekday ); ?>, <?php echo esc_html( $time_start ); ?><?php echo $time_end ? ' – ' . esc_html( $time_end ) : ''; ?></span>
+                                </div>
+                                <?php elseif ( $weekday ) : ?>
+                                <div class="ce-card-meta-row">
+                                    <svg viewBox="0 0 16 16" width="13" height="13" fill="none"><rect x="2" y="3" width="12" height="11" rx="1.5" stroke="currentColor" stroke-width="1.2"/><path d="M5 2v2M11 2v2M2 7h12" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+                                    <span><?php echo esc_html( $event['allDay'] ? $weekday . ' · ' . esc_html__( 'All day', 'club-events' ) : $weekday ); ?></span>
+                                </div>
+                                <?php endif; ?>
+
+                                <?php if ( $event['location'] ) : ?>
+                                <div class="ce-card-meta-row">
+                                    <svg viewBox="0 0 16 16" width="13" height="13" fill="none"><path d="M8 1.5a4.5 4.5 0 0 1 4.5 4.5c0 3.5-4.5 8.5-4.5 8.5S3.5 9.5 3.5 6A4.5 4.5 0 0 1 8 1.5z" stroke="currentColor" stroke-width="1.2"/><circle cx="8" cy="6" r="1.5" fill="currentColor"/></svg>
+                                    <span><?php echo esc_html( $event['location'] ); ?></span>
+                                </div>
+                                <?php endif; ?>
+                            </div>
+
+                            <?php if ( $event['excerpt'] ) : ?>
+                            <p class="ce-card-excerpt"><?php echo esc_html( $event['excerpt'] ); ?></p>
+                            <?php endif; ?>
+
+                            <div class="ce-card-footer">
+                                <span class="ce-card-cta"><?php esc_html_e( 'More details', 'club-events' ); ?> →</span>
+                                <a href="<?php echo esc_url( CE_ICS_Export::get_single_url( $event['id'] ) ); ?>"
+                                   class="ce-card-ics"
+                                   onclick="event.stopPropagation()"
+                                   title="<?php esc_attr_e( 'Add to Calendar', 'club-events' ); ?>">
+                                    <svg viewBox="0 0 16 16" width="14" height="14" fill="none"><rect x="2" y="3" width="12" height="11" rx="1.5" stroke="currentColor" stroke-width="1.2"/><path d="M5 2v2M11 2v2M2 7h12" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><path d="M8 10V8M8 12v.01" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+                                </a>
+                            </div>
+                        </div>
+                    </a>
+                </article>
+                <?php endforeach; ?>
+            </div>
+            <?php endif; ?>
+        </div>
+        <?php
         return ob_get_clean();
     }
 

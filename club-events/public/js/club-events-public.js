@@ -22,6 +22,8 @@
       filterTimeline(wrap, category);
     } else if (wrap.dataset.ceComponent === 'overview') {
       filterOverview(wrap, category);
+    } else if (wrap.dataset.ceComponent === 'cards') {
+      filterCards(wrap, category);
     }
   });
 
@@ -57,6 +59,24 @@
       var visibleEvents = Array.from(day.querySelectorAll('.ce-cal-event')).filter(function (e) { return !e.hidden; });
       day.classList.toggle('ce-cal-has-events', visibleEvents.length > 0);
     });
+  }
+
+  function filterCards(wrap, category) {
+    var items = wrap.querySelectorAll('.ce-card-item');
+    var hasVisible = false;
+    items.forEach(function (item) {
+      if (!category) {
+        item.hidden = false;
+        hasVisible = true;
+        return;
+      }
+      var cats = (item.dataset.category || '').split(' ');
+      var visible = cats.includes(category);
+      item.hidden = !visible;
+      if (visible) hasVisible = true;
+    });
+    var empty = wrap.querySelector('.ce-empty');
+    if (empty) empty.hidden = hasVisible;
   }
 
   /* ─── Copy to clipboard ───────────────────────────────────────────────── */

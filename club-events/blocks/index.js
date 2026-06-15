@@ -104,6 +104,44 @@
     save: function () { return null; },
   });
 
+  /* ── Cards Block ─────────────────────────────────────────────────── */
+  blocks.registerBlockType('club-events/cards', {
+    title:       __('Events Cards', 'club-events'),
+    description: __('Show club events in a responsive card grid.', 'club-events'),
+    icon:        'grid-view',
+    category:    'widgets',
+    attributes: {
+      category:    { type: 'string',  default: '' },
+      limit:       { type: 'number',  default: 6 },
+      columns:     { type: 'number',  default: 3 },
+      show_past:   { type: 'boolean', default: false },
+      show_filter: { type: 'boolean', default: true },
+      show_image:  { type: 'boolean', default: true },
+    },
+    edit: function (props) {
+      var attrs = props.attributes;
+      return el('div', null,
+        el(InspectorControls, null,
+          el(PanelBody, { title: __('Settings', 'club-events'), initialOpen: true },
+            el(RangeControl, { label: __('Columns', 'club-events'), value: attrs.columns, min: 1, max: 4, onChange: function(v){ props.setAttributes({columns:v}); } }),
+            el(RangeControl, { label: __('Max events', 'club-events'), value: attrs.limit, min: 1, max: 50, onChange: function(v){ props.setAttributes({limit:v}); } }),
+            el(TextControl,  { label: __('Category slug (optional)', 'club-events'), value: attrs.category, onChange: function(v){ props.setAttributes({category:v}); } }),
+            el(ToggleControl,{ label: __('Show image', 'club-events'), checked: attrs.show_image, onChange: function(v){ props.setAttributes({show_image:v}); } }),
+            el(ToggleControl,{ label: __('Show past events', 'club-events'), checked: attrs.show_past, onChange: function(v){ props.setAttributes({show_past:v}); } }),
+            el(ToggleControl,{ label: __('Show category filter', 'club-events'), checked: attrs.show_filter, onChange: function(v){ props.setAttributes({show_filter:v}); } })
+          )
+        ),
+        ServerSideRender
+          ? el(ServerSideRender, { block: 'club-events/cards', attributes: attrs })
+          : el('div', { className: 'ce-block-placeholder' },
+              el('span', { className: 'dashicons dashicons-grid-view' }),
+              el('p', null, __('Events Cards', 'club-events'))
+            )
+      );
+    },
+    save: function () { return null; },
+  });
+
   /* ── Subscribe Block ─────────────────────────────────────────────── */
   blocks.registerBlockType('club-events/subscribe', {
     title:       __('Events Subscribe Form', 'club-events'),

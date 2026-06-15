@@ -136,6 +136,17 @@
                 </div>
             </div>
             <div class="ce-shortcode-item">
+                <code>[club_events_cards]</code>
+                <p><?php esc_html_e( 'Responsive card grid — embeds in any page or post.', 'club-events' ); ?></p>
+                <div class="ce-shortcode-attrs">
+                    <span><code>columns="3"</code></span>
+                    <span><code>limit="6"</code></span>
+                    <span><code>category="slug"</code></span>
+                    <span><code>show_image="true"</code></span>
+                    <span><code>show_filter="true"</code></span>
+                </div>
+            </div>
+            <div class="ce-shortcode-item">
                 <code>[club_events_list]</code>
                 <p><?php esc_html_e( 'Compact upcoming events list for sidebars or widgets.', 'club-events' ); ?></p>
                 <div class="ce-shortcode-attrs">
