@@ -25,6 +25,7 @@ class CE_Plugin {
         require_once CE_PLUGIN_DIR . 'includes/class-subscription.php';
         require_once CE_PLUGIN_DIR . 'includes/class-shortcodes.php';
         require_once CE_PLUGIN_DIR . 'includes/class-rest-api.php';
+        require_once CE_PLUGIN_DIR . 'includes/class-astra-compat.php';
         require_once CE_PLUGIN_DIR . 'admin/class-admin.php';
     }
 
@@ -38,6 +39,7 @@ class CE_Plugin {
         new CE_Subscription();
         new CE_Shortcodes();
         new CE_REST_API();
+        new CE_Astra_Compat();
 
         if ( is_admin() ) {
             new CE_Admin();

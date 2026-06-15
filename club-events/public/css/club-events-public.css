@@ -866,3 +866,87 @@
   .ce-card-date-day { font-size: 16px; }
   .ce-card-date-month { font-size: 10px; }
 }
+
+/* ─── Astra Theme Integration ─────────────────────────────────────────────
+   These rules only apply when Astra body classes are present.
+   They normalise spacing, container alignment and typography
+   so the plugin looks native inside any Astra layout. */
+
+/* ── Content area alignment ─── */
+body.ce-single-event-page #primary.content-area,
+body.ce-archive-page #primary.content-area {
+  width: 100%;
+  max-width: 100%;
+  padding: 0;
+  float: none;
+}
+body.ce-single-event-page .ast-container,
+body.ce-archive-page .ast-container {
+  display: block;
+}
+/* Astra "separate container" boxed layout — match inner padding */
+.ast-separate-container .ce-event-body-wrap,
+.ast-separate-container .ce-archive-wrap {
+  padding-left: 0;
+  padding-right: 0;
+}
+
+/* ── Breadcrumb row ─── */
+.ce-breadcrumb-wrap {
+  padding: 10px 0 0;
+  font-size: 13px;
+}
+.ce-breadcrumb-wrap .astra-breadcrumbs {
+  padding: 0;
+  background: none;
+}
+
+/* ── Astra typography sync ─── */
+.ce-event-title       { font-size: var(--ast-heading-font-size-h1, 2rem); }
+.ce-card-title        { font-size: var(--ast-heading-font-size-h3, 1rem); }
+.ce-month-label,
+.ce-overview-list-title { font-size: var(--ast-heading-font-size-h4, .85rem); }
+
+/* ── Astra woo/shop accent — stay consistent ─── */
+.ast-woocommerce-container .ce-btn-primary { background: var(--ce-primary); }
+
+/* ── Admin bar offset when transparent header is enabled ─── */
+.admin-bar .ce-event-hero {
+  margin-top: 0; /* Astra handles admin-bar offset via its own JS */
+}
+
+/* ── Elementor compatibility — avoid double padding ─── */
+.elementor-section .ce-cards-wrap,
+.elementor-section .ce-timeline-wrap,
+.elementor-section .ce-overview-wrap {
+  padding-top: 0;
+}
+.e-con .ce-cards-grid { gap: 20px; }
+
+/* ── Astra Pro transparent header — content must clear it ─── */
+.ast-header-above-grid-enabled #content,
+.ast-header-below-grid-enabled #content {
+  position: relative;
+  z-index: 1;
+}
+
+/* ── Single event: hero background doesn't fight transparent header ─── */
+body.single-club_event.ast-transparent-header .ce-event-hero {
+  padding-top: calc(var(--ast-transparent-header-logo-width, 80px) + 40px);
+}
+
+/* ── Astra's page content spacing sync ─── */
+.ce-archive-wrap,
+.site-main > .ce-single-event {
+  padding-bottom: var(--ast-section-spacing, 40px);
+}
+
+/* ── Print styles ─── */
+@media print {
+  .ce-event-hero { background: #fff !important; color: #000 !important; }
+  .ce-event-hero-img { display: none; }
+  .ce-event-hero-content { padding: 0; }
+  .ce-btn, .ce-card-ics, .ce-filter-bar, .ce-ics-link { display: none; }
+  .ce-event-body-wrap { grid-template-columns: 1fr; }
+  .ce-sidebar-actions { display: none; }
+}
