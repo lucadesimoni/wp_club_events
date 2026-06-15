@@ -85,7 +85,7 @@ class CE_ICS_Export {
         $lines[] = 'PRODID:-//Club Events Manager//WordPress//EN';
         $lines[] = 'CALSCALE:GREGORIAN';
         $lines[] = 'METHOD:PUBLISH';
-        $lines[] = 'X-WR-CALNAME:' . $this->ics_escape( $cal_name );
+        $lines[] = $this->fold_property( 'X-WR-CALNAME', $this->ics_escape( $cal_name ) );
         $lines[] = 'X-WR-TIMEZONE:' . get_option( 'timezone_string', 'UTC' );
 
         foreach ( $events as $event ) {
@@ -95,8 +95,8 @@ class CE_ICS_Export {
             }
 
             $lines[] = 'BEGIN:VEVENT';
-            $lines[] = 'UID:' . $uid;
-            $lines[] = 'SUMMARY:' . $this->ics_escape( $event['title'] );
+            $lines[] = $this->fold_property( 'UID', $uid );
+            $lines[] = $this->fold_property( 'SUMMARY', $this->ics_escape( $event['title'] ) );
 
             if ( $event['allDay'] ) {
                 $lines[] = 'DTSTART;VALUE=DATE:' . date( 'Ymd', strtotime( $event['start'] ) );
@@ -112,14 +112,14 @@ class CE_ICS_Export {
             }
 
             if ( $event['location'] ) {
-                $lines[] = 'LOCATION:' . $this->ics_escape( $event['location'] );
+                $lines[] = $this->fold_property( 'LOCATION', $this->ics_escape( $event['location'] ) );
             }
 
             if ( $event['excerpt'] ) {
-                $lines[] = 'DESCRIPTION:' . $this->ics_escape( $event['excerpt'] );
+                $lines[] = $this->fold_property( 'DESCRIPTION', $this->ics_escape( $event['excerpt'] ) );
             }
 
-            $lines[] = 'URL:' . $event['url'];
+            $lines[] = $this->fold_property( 'URL', $event['url'] );
             $lines[] = 'DTSTAMP:' . gmdate( 'Ymd\THis\Z' );
             $lines[] = 'END:VEVENT';
         }
@@ -133,7 +133,11 @@ class CE_ICS_Export {
         $str = strip_tags( html_entity_decode( $str, ENT_QUOTES, 'UTF-8' ) );
         $str = str_replace( [ '\\', ';', ',' ], [ '\\\\', '\;', '\,' ], $str );
         $str = str_replace( "\n", '\n', $str );
-        return $this->fold_line( $str );
+        return $str;
+    }
+
+    private function fold_property( $name, $value ) {
+        return $this->fold_line( $name . ':' . $value );
     }
 
     private function fold_line( $str ) {
