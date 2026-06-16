@@ -93,6 +93,12 @@
     document.getElementById('ce-cal-api-key').value = d.apiKey;
     document.getElementById('ce-cal-color').value = d.color;
     document.getElementById('ce-cal-sync-enabled').checked = d.syncEnabled === '1';
+
+    // Restore event type checkboxes
+    var saved = (d.eventTypes || '').split(',').map(function (s) { return s.trim(); }).filter(Boolean);
+    var cbs = document.querySelectorAll('#ce-cal-event-types input[type="checkbox"]');
+    cbs.forEach(function (cb) { cb.checked = saved.indexOf(cb.value) !== -1; });
+
     calFormWrap.hidden = false;
     calFormTitle.textContent = 'Edit Calendar';
     calFormWrap.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -114,7 +120,7 @@
     });
   });
 
-  // Save calendar form
+  // Save calendar form (uses FormData directly to support checkbox arrays)
   if (calForm) {
     calForm.addEventListener('submit', function (e) {
       e.preventDefault();
@@ -122,21 +128,14 @@
       saveBtn.disabled = true;
       saveBtn.textContent = i18n.saving || 'Saving…';
 
-      var data = {
-        id:           document.getElementById('ce-cal-id').value,
-        name:         document.getElementById('ce-cal-name').value,
-        calendar_id:  document.getElementById('ce-cal-calendar-id').value,
-        api_key:      document.getElementById('ce-cal-api-key').value,
-        color:        document.getElementById('ce-cal-color').value,
-        sync_enabled: document.getElementById('ce-cal-sync-enabled').checked ? '1' : '0',
-      };
+      var body = new FormData(calForm);
+      body.append('action', 'ce_save_calendar');
+      body.append('nonce', nonce);
 
-      post('ce_save_calendar', data).then(function (res) {
+      fetch(ajaxUrl, { method: 'POST', body: body }).then(function (r) { return r.json(); }).then(function (res) {
         saveBtn.disabled = false;
         saveBtn.textContent = i18n.saved || 'Saved!';
-        setTimeout(function () {
-          window.location.reload();
-        }, 800);
+        setTimeout(function () { window.location.reload(); }, 800);
       }).catch(function () {
         saveBtn.disabled = false;
         saveBtn.textContent = 'Save Calendar';

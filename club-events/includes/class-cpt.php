@@ -65,6 +65,24 @@ class CE_CPT {
             'rewrite'           => [ 'slug' => 'event-category' ],
         ] );
 
+        register_taxonomy( 'event_type', 'club_event', [
+            'labels' => [
+                'name'              => __( 'Event Types', 'club-events' ),
+                'singular_name'     => __( 'Event Type', 'club-events' ),
+                'search_items'      => __( 'Search Types', 'club-events' ),
+                'all_items'         => __( 'All Types', 'club-events' ),
+                'edit_item'         => __( 'Edit Type', 'club-events' ),
+                'add_new_item'      => __( 'Add New Type', 'club-events' ),
+                'not_found'         => __( 'No types found.', 'club-events' ),
+                'menu_name'         => __( 'Event Types', 'club-events' ),
+            ],
+            'hierarchical'      => false,
+            'show_ui'           => true,
+            'show_in_rest'      => true,
+            'show_admin_column' => true,
+            'rewrite'           => [ 'slug' => 'event-type' ],
+        ] );
+
         register_taxonomy( 'event_tag', 'club_event', [
             'labels' => [
                 'name'          => __( 'Tags', 'club-events' ),
@@ -269,7 +287,7 @@ class CE_CPT {
                 return $custom;
             }
         }
-        if ( is_post_type_archive( 'club_event' ) || is_tax( [ 'event_category', 'event_tag' ] ) ) {
+        if ( is_post_type_archive( 'club_event' ) || is_tax( [ 'event_category', 'event_type', 'event_tag' ] ) ) {
             $custom = CE_PLUGIN_DIR . 'templates/archive-club-event.php';
             if ( '' === locate_template( 'archive-club-event.php' ) ) {
                 return $custom;
@@ -309,6 +327,15 @@ class CE_CPT {
             unset( $args['to'] );
         }
 
+        if ( ! empty( $args['event_type'] ) ) {
+            $defaults['tax_query'][] = [
+                'taxonomy' => 'event_type',
+                'field'    => 'slug',
+                'terms'    => (array) $args['event_type'],
+            ];
+            unset( $args['event_type'] );
+        }
+
         $query_args = wp_parse_args( $args, $defaults );
         return get_posts( $query_args );
     }
@@ -323,7 +350,8 @@ class CE_CPT {
         $loc_url  = get_post_meta( $post_id, '_ce_location_url', true );
         $ext_url  = get_post_meta( $post_id, '_ce_external_url', true );
 
-        $cats = wp_get_post_terms( $post_id, 'event_category', [ 'fields' => 'all' ] );
+        $cats  = wp_get_post_terms( $post_id, 'event_category', [ 'fields' => 'all' ] );
+        $types = wp_get_post_terms( $post_id, 'event_type', [ 'fields' => 'all' ] );
 
         return [
             'id'          => $post_id,
@@ -339,6 +367,7 @@ class CE_CPT {
             'locationUrl' => $loc_url,
             'externalUrl' => $ext_url,
             'categories'  => array_map( fn( $t ) => [ 'id' => $t->term_id, 'name' => $t->name, 'slug' => $t->slug ], is_wp_error( $cats ) ? [] : $cats ),
+            'types'       => array_map( fn( $t ) => [ 'id' => $t->term_id, 'name' => $t->name, 'slug' => $t->slug ], is_wp_error( $types ) ? [] : $types ),
         ];
     }
 }

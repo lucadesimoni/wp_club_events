@@ -143,6 +143,11 @@ class CE_Google_Calendar {
             update_post_meta( $post_id, '_ce_location', sanitize_text_field( $item['location'] ?? '' ) );
             update_post_meta( $post_id, '_ce_color', sanitize_hex_color( $cal->color ) ?: '#3b82f6' );
             update_post_meta( $post_id, '_ce_ical_uid', sanitize_text_field( $item['iCalUID'] ?? '' ) );
+
+            if ( ! empty( $cal->event_types ) ) {
+                $type_slugs = array_filter( array_map( 'trim', explode( ',', $cal->event_types ) ) );
+                wp_set_object_terms( $post_id, $type_slugs, 'event_type' );
+            }
         }
 
         $this->delete_stale_events( (string) $cal->id, $synced_ids, $time_min, $time_max );
@@ -217,9 +222,10 @@ class CE_Google_Calendar {
                 'calendar_id'  => sanitize_text_field( $data['calendar_id'] ),
                 'api_key'      => sanitize_text_field( $data['api_key'] ?? '' ),
                 'color'        => sanitize_hex_color( $data['color'] ?? '#3b82f6' ) ?: '#3b82f6',
+                'event_types'  => sanitize_text_field( $data['event_types'] ?? '' ),
                 'sync_enabled' => empty( $data['sync_enabled'] ) ? 0 : 1,
             ],
-            [ '%s', '%s', '%s', '%s', '%d' ]
+            [ '%s', '%s', '%s', '%s', '%s', '%d' ]
         );
     }
 
@@ -232,10 +238,11 @@ class CE_Google_Calendar {
                 'calendar_id'  => sanitize_text_field( $data['calendar_id'] ),
                 'api_key'      => sanitize_text_field( $data['api_key'] ?? '' ),
                 'color'        => sanitize_hex_color( $data['color'] ?? '#3b82f6' ) ?: '#3b82f6',
+                'event_types'  => sanitize_text_field( $data['event_types'] ?? '' ),
                 'sync_enabled' => empty( $data['sync_enabled'] ) ? 0 : 1,
             ],
             [ 'id' => (int) $id ],
-            [ '%s', '%s', '%s', '%s', '%d' ],
+            [ '%s', '%s', '%s', '%s', '%s', '%d' ],
             [ '%d' ]
         );
     }

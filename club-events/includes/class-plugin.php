@@ -81,6 +81,7 @@ class CE_Plugin {
 
     public static function activate() {
         self::create_tables();
+        self::maybe_upgrade_db();
         self::set_defaults();
         flush_rewrite_rules();
 
@@ -118,6 +119,7 @@ class CE_Plugin {
             calendar_id varchar(500) NOT NULL,
             api_key varchar(500) DEFAULT '',
             color varchar(20) DEFAULT '#3b82f6',
+            event_types varchar(500) DEFAULT '',
             sync_enabled tinyint(1) DEFAULT 1,
             last_sync datetime DEFAULT NULL,
             PRIMARY KEY (id)
@@ -125,6 +127,14 @@ class CE_Plugin {
 
         require_once ABSPATH . 'wp-admin/includes/upgrade.php';
         dbDelta( $sql );
+    }
+
+    public static function maybe_upgrade_db() {
+        global $wpdb;
+        $cols = $wpdb->get_col( "SHOW COLUMNS FROM {$wpdb->prefix}ce_calendars" );
+        if ( ! in_array( 'event_types', $cols, true ) ) {
+            $wpdb->query( "ALTER TABLE {$wpdb->prefix}ce_calendars ADD COLUMN event_types varchar(500) DEFAULT '' AFTER color" );
+        }
     }
 
     private static function set_defaults() {

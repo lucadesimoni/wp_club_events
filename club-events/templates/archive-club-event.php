@@ -31,7 +31,7 @@ if ( $is_astra ) {
     <div class="ce-archive-header">
         <h1 class="ce-archive-title">
             <?php
-            if ( is_tax( 'event_category' ) || is_tax( 'event_tag' ) ) {
+            if ( is_tax( 'event_category' ) || is_tax( 'event_type' ) || is_tax( 'event_tag' ) ) {
                 single_term_title();
             } elseif ( is_tax() ) {
                 single_term_title();

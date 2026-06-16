@@ -152,10 +152,9 @@
 .ce-meta-item svg { width: 14px; height: 14px; stroke-width: 1.5; flex-shrink: 0; }
 .ce-meta-item a { color: inherit; text-decoration: underline; }
 
-.ce-category-badge {
+.ce-category-badge,
+.ce-type-badge {
   display: inline-block;
-  background: var(--ce-primary-lt);
-  color: var(--ce-primary);
   padding: 2px 10px;
   border-radius: 999px;
   font-size: 11px;
@@ -163,7 +162,23 @@
   text-decoration: none;
   letter-spacing: .02em;
 }
+.ce-category-badge {
+  background: var(--ce-primary-lt);
+  color: var(--ce-primary);
+}
 .ce-category-badge:hover { background: var(--ce-primary); color: var(--ce-white); }
+.ce-type-badge {
+  background: #f0fdf4;
+  color: #15803d;
+}
+
+/* card type badges row */
+.ce-card-type-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 10px;
+}
 
 .ce-event-excerpt {
   font-size: 14px;

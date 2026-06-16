@@ -15,10 +15,11 @@ class CE_REST_API {
             'callback'            => [ $this, 'get_events' ],
             'permission_callback' => '__return_true',
             'args'                => [
-                'from'     => [ 'type' => 'string', 'sanitize_callback' => 'sanitize_text_field' ],
-                'to'       => [ 'type' => 'string', 'sanitize_callback' => 'sanitize_text_field' ],
-                'category' => [ 'type' => 'string', 'sanitize_callback' => 'sanitize_text_field' ],
-                'limit'    => [ 'type' => 'integer', 'default' => 50, 'minimum' => 1, 'maximum' => 200 ],
+                'from'       => [ 'type' => 'string',  'sanitize_callback' => 'sanitize_text_field' ],
+                'to'         => [ 'type' => 'string',  'sanitize_callback' => 'sanitize_text_field' ],
+                'category'   => [ 'type' => 'string',  'sanitize_callback' => 'sanitize_text_field' ],
+                'event_type' => [ 'type' => 'string',  'sanitize_callback' => 'sanitize_text_field' ],
+                'limit'      => [ 'type' => 'integer', 'default' => 50, 'minimum' => 1, 'maximum' => 200 ],
             ],
         ] );
 
@@ -31,6 +32,12 @@ class CE_REST_API {
         register_rest_route( self::NAMESPACE, '/categories', [
             'methods'             => WP_REST_Server::READABLE,
             'callback'            => [ $this, 'get_categories' ],
+            'permission_callback' => '__return_true',
+        ] );
+
+        register_rest_route( self::NAMESPACE, '/event-types', [
+            'methods'             => WP_REST_Server::READABLE,
+            'callback'            => [ $this, 'get_event_types' ],
             'permission_callback' => '__return_true',
         ] );
     }
@@ -59,6 +66,11 @@ class CE_REST_API {
             ] ];
         }
 
+        $event_type = $request->get_param( 'event_type' );
+        if ( $event_type ) {
+            $args['event_type'] = $event_type;
+        }
+
         $posts  = CE_CPT::get_events( $args );
         $events = array_map( fn( $p ) => CE_CPT::format_event( $p->ID ), $posts );
 
@@ -80,6 +92,26 @@ class CE_REST_API {
         $terms = get_terms( [
             'taxonomy'   => 'event_category',
             'hide_empty' => true,
+        ] );
+
+        if ( is_wp_error( $terms ) ) {
+            return rest_ensure_response( [] );
+        }
+
+        $data = array_map( fn( $t ) => [
+            'id'    => $t->term_id,
+            'name'  => $t->name,
+            'slug'  => $t->slug,
+            'count' => $t->count,
+        ], $terms );
+
+        return rest_ensure_response( $data );
+    }
+
+    public function get_event_types( WP_REST_Request $request ) {
+        $terms = get_terms( [
+            'taxonomy'   => 'event_type',
+            'hide_empty' => false,
         ] );
 
         if ( is_wp_error( $terms ) ) {

@@ -48,6 +48,23 @@
                     <input type="text" id="ce-cal-api-key" name="api_key" class="large-text"
                            placeholder="<?php esc_attr_e( 'AIza…', 'club-events' ); ?>">
                 </div>
+                <?php if ( ! empty( $event_types ) ) : ?>
+                <div class="ce-form-row">
+                    <label><?php esc_html_e( 'Event Types', 'club-events' ); ?>
+                        <span class="ce-field-hint">
+                            <?php esc_html_e( 'Events imported from this calendar are automatically assigned these types.', 'club-events' ); ?>
+                        </span>
+                    </label>
+                    <div class="ce-checkbox-group" id="ce-cal-event-types">
+                        <?php foreach ( $event_types as $et ) : ?>
+                        <label class="ce-checkbox-label">
+                            <input type="checkbox" name="event_types[]" value="<?php echo esc_attr( $et->slug ); ?>">
+                            <?php echo esc_html( $et->name ); ?>
+                        </label>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+                <?php endif; ?>
                 <div class="ce-form-row">
                     <label class="ce-checkbox-label">
                         <input type="checkbox" id="ce-cal-sync-enabled" name="sync_enabled" value="1" checked>
@@ -77,6 +94,7 @@
                 <tr>
                     <th><?php esc_html_e( 'Calendar', 'club-events' ); ?></th>
                     <th><?php esc_html_e( 'Calendar ID', 'club-events' ); ?></th>
+                    <th><?php esc_html_e( 'Event Types', 'club-events' ); ?></th>
                     <th><?php esc_html_e( 'Sync', 'club-events' ); ?></th>
                     <th><?php esc_html_e( 'Last Sync', 'club-events' ); ?></th>
                     <th><?php esc_html_e( 'Actions', 'club-events' ); ?></th>
@@ -90,6 +108,20 @@
                         <strong><?php echo esc_html( $cal->name ); ?></strong>
                     </td>
                     <td><code><?php echo esc_html( $cal->calendar_id ); ?></code></td>
+                    <td>
+                        <?php
+                        if ( ! empty( $cal->event_types ) ) {
+                            $type_slugs = array_filter( array_map( 'trim', explode( ',', $cal->event_types ) ) );
+                            foreach ( $type_slugs as $slug ) {
+                                $term = get_term_by( 'slug', $slug, 'event_type' );
+                                $label = $term ? $term->name : $slug;
+                                echo '<span class="ce-badge ce-badge--blue">' . esc_html( $label ) . '</span> ';
+                            }
+                        } else {
+                            echo '<span class="ce-hint">—</span>';
+                        }
+                        ?>
+                    </td>
                     <td>
                         <?php if ( $cal->sync_enabled ) : ?>
                         <span class="ce-badge ce-badge--green"><?php esc_html_e( 'Enabled', 'club-events' ); ?></span>
@@ -113,6 +145,7 @@
                                 data-calendar-id="<?php echo esc_attr( $cal->calendar_id ); ?>"
                                 data-api-key="<?php echo esc_attr( $cal->api_key ); ?>"
                                 data-color="<?php echo esc_attr( $cal->color ); ?>"
+                                data-event-types="<?php echo esc_attr( $cal->event_types ?? '' ); ?>"
                                 data-sync-enabled="<?php echo esc_attr( $cal->sync_enabled ); ?>">
                             <?php esc_html_e( 'Edit', 'club-events' ); ?>
                         </button>

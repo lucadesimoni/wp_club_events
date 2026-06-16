@@ -21,8 +21,10 @@ class CE_Shortcodes {
         register_block_type( 'club-events/timeline', [
             'render_callback' => [ $this, 'timeline' ],
             'attributes'      => [
-                'category'    => [ 'type' => 'string', 'default' => '' ],
-                'limit'       => [ 'type' => 'number', 'default' => 20 ],
+                'category'    => [ 'type' => 'string',  'default' => '' ],
+                'event_type'  => [ 'type' => 'string',  'default' => '' ],
+                'filter_by'   => [ 'type' => 'string',  'default' => 'category' ],
+                'limit'       => [ 'type' => 'number',  'default' => 20 ],
                 'show_past'   => [ 'type' => 'boolean', 'default' => false ],
                 'show_filter' => [ 'type' => 'boolean', 'default' => true ],
             ],
@@ -32,7 +34,9 @@ class CE_Shortcodes {
         register_block_type( 'club-events/overview', [
             'render_callback' => [ $this, 'overview' ],
             'attributes'      => [
-                'category'    => [ 'type' => 'string', 'default' => '' ],
+                'category'    => [ 'type' => 'string',  'default' => '' ],
+                'event_type'  => [ 'type' => 'string',  'default' => '' ],
+                'filter_by'   => [ 'type' => 'string',  'default' => 'category' ],
                 'show_filter' => [ 'type' => 'boolean', 'default' => true ],
             ],
             'editor_script'   => 'club-events-blocks',
@@ -42,6 +46,8 @@ class CE_Shortcodes {
             'render_callback' => [ $this, 'cards' ],
             'attributes'      => [
                 'category'    => [ 'type' => 'string',  'default' => '' ],
+                'event_type'  => [ 'type' => 'string',  'default' => '' ],
+                'filter_by'   => [ 'type' => 'string',  'default' => 'category' ],
                 'limit'       => [ 'type' => 'number',  'default' => 6 ],
                 'columns'     => [ 'type' => 'number',  'default' => 3 ],
                 'show_past'   => [ 'type' => 'boolean', 'default' => false ],
@@ -70,6 +76,8 @@ class CE_Shortcodes {
         $atts = is_array( $atts ) ? $atts : [];
         $atts = shortcode_atts( [
             'category'    => '',
+            'event_type'  => '',
+            'filter_by'   => 'category',
             'limit'       => 20,
             'show_past'   => false,
             'show_filter' => true,
@@ -91,20 +99,25 @@ class CE_Shortcodes {
             ] ];
         }
 
+        if ( $atts['event_type'] ) {
+            $query_args['event_type'] = sanitize_text_field( $atts['event_type'] );
+        }
+
         $posts  = CE_CPT::get_events( $query_args );
         $events = array_map( fn( $p ) => CE_CPT::format_event( $p->ID ), $posts );
 
-        $categories = get_terms( [ 'taxonomy' => 'event_category', 'hide_empty' => true ] );
+        $filter_taxonomy = ( 'event_type' === $atts['filter_by'] ) ? 'event_type' : 'event_category';
+        $filter_terms    = get_terms( [ 'taxonomy' => $filter_taxonomy, 'hide_empty' => true ] );
 
         ob_start();
         ?>
         <div class="ce-timeline-wrap" data-ce-component="timeline">
-            <?php if ( ! empty( $atts['show_filter'] ) && ! is_wp_error( $categories ) && count( $categories ) > 1 ) : ?>
+            <?php if ( ! empty( $atts['show_filter'] ) && ! is_wp_error( $filter_terms ) && count( $filter_terms ) > 1 ) : ?>
             <div class="ce-filter-bar">
                 <button class="ce-filter-btn active" data-category=""><?php esc_html_e( 'All', 'club-events' ); ?></button>
-                <?php foreach ( $categories as $cat ) : ?>
-                <button class="ce-filter-btn" data-category="<?php echo esc_attr( $cat->slug ); ?>">
-                    <?php echo esc_html( $cat->name ); ?>
+                <?php foreach ( $filter_terms as $term ) : ?>
+                <button class="ce-filter-btn" data-category="<?php echo esc_attr( $term->slug ); ?>">
+                    <?php echo esc_html( $term->name ); ?>
                 </button>
                 <?php endforeach; ?>
             </div>
@@ -126,7 +139,12 @@ class CE_Shortcodes {
                         <h3 class="ce-month-label"><?php echo esc_html( $month ); ?></h3>
                     <?php endif; ?>
 
-                    <div class="ce-timeline-item" data-category="<?php echo esc_attr( implode( ' ', array_column( $event['categories'], 'slug' ) ) ); ?>"
+                    <?php
+                    $filter_slugs = ( 'event_type' === $atts['filter_by'] )
+                        ? implode( ' ', array_column( $event['types'], 'slug' ) )
+                        : implode( ' ', array_column( $event['categories'], 'slug' ) );
+                    ?>
+                    <div class="ce-timeline-item" data-category="<?php echo esc_attr( $filter_slugs ); ?>"
                          style="--ce-color: <?php echo esc_attr( $event['color'] ); ?>">
                         <div class="ce-timeline-dot"></div>
                         <div class="ce-timeline-content">
@@ -163,6 +181,9 @@ class CE_Shortcodes {
                                     <?php foreach ( $event['categories'] as $cat ) : ?>
                                     <span class="ce-meta-item ce-category-badge"><?php echo esc_html( $cat['name'] ); ?></span>
                                     <?php endforeach; ?>
+                                    <?php foreach ( $event['types'] as $type ) : ?>
+                                    <span class="ce-meta-item ce-type-badge"><?php echo esc_html( $type['name'] ); ?></span>
+                                    <?php endforeach; ?>
                                 </div>
                                 <?php if ( $event['excerpt'] ) : ?>
                                 <p class="ce-event-excerpt"><?php echo esc_html( $event['excerpt'] ); ?></p>
@@ -192,6 +213,8 @@ class CE_Shortcodes {
         $atts = is_array( $atts ) ? $atts : [];
         $atts = shortcode_atts( [
             'category'    => '',
+            'event_type'  => '',
+            'filter_by'   => 'category',
             'show_filter' => true,
         ], $atts, 'club_events_overview' );
 
@@ -211,6 +234,9 @@ class CE_Shortcodes {
         if ( $atts['category'] ) {
             $query_args['tax_query'] = [ [ 'taxonomy' => 'event_category', 'field' => 'slug', 'terms' => sanitize_text_field( $atts['category'] ) ] ];
         }
+        if ( $atts['event_type'] ) {
+            $query_args['event_type'] = sanitize_text_field( $atts['event_type'] );
+        }
 
         $posts  = CE_CPT::get_events( $query_args );
         $events_by_day = [];
@@ -227,17 +253,18 @@ class CE_Shortcodes {
 
         $current_url = remove_query_arg( [ 'ce_year', 'ce_month' ] );
 
-        $categories = get_terms( [ 'taxonomy' => 'event_category', 'hide_empty' => true ] );
+        $filter_taxonomy = ( 'event_type' === $atts['filter_by'] ) ? 'event_type' : 'event_category';
+        $filter_terms    = get_terms( [ 'taxonomy' => $filter_taxonomy, 'hide_empty' => true ] );
 
         ob_start();
         ?>
         <div class="ce-overview-wrap" data-ce-component="overview">
-            <?php if ( ! empty( $atts['show_filter'] ) && ! is_wp_error( $categories ) && count( $categories ) > 1 ) : ?>
+            <?php if ( ! empty( $atts['show_filter'] ) && ! is_wp_error( $filter_terms ) && count( $filter_terms ) > 1 ) : ?>
             <div class="ce-filter-bar">
                 <button class="ce-filter-btn active" data-category=""><?php esc_html_e( 'All', 'club-events' ); ?></button>
-                <?php foreach ( $categories as $cat ) : ?>
-                <button class="ce-filter-btn" data-category="<?php echo esc_attr( $cat->slug ); ?>">
-                    <?php echo esc_html( $cat->name ); ?>
+                <?php foreach ( $filter_terms as $term ) : ?>
+                <button class="ce-filter-btn" data-category="<?php echo esc_attr( $term->slug ); ?>">
+                    <?php echo esc_html( $term->name ); ?>
                 </button>
                 <?php endforeach; ?>
             </div>
@@ -277,9 +304,12 @@ class CE_Shortcodes {
                     if ( $has_events ) {
                         echo '<div class="ce-cal-events">';
                         foreach ( $events_by_day[ $day ] as $ev ) {
+                            $ev_filter_slugs = ( 'event_type' === $atts['filter_by'] )
+                                ? implode( ' ', array_column( $ev['types'], 'slug' ) )
+                                : implode( ' ', array_column( $ev['categories'], 'slug' ) );
                             echo '<a href="' . esc_url( $ev['url'] ) . '" class="ce-cal-event" '
                                 . 'style="--ce-color:' . esc_attr( $ev['color'] ) . '" '
-                                . 'data-category="' . esc_attr( implode( ' ', array_column( $ev['categories'], 'slug' ) ) ) . '" '
+                                . 'data-category="' . esc_attr( $ev_filter_slugs ) . '" '
                                 . 'title="' . esc_attr( $ev['title'] ) . '">'
                                 . '<span class="ce-cal-event-dot"></span>'
                                 . '<span class="ce-cal-event-title">' . esc_html( $ev['title'] ) . '</span>'
@@ -301,7 +331,12 @@ class CE_Shortcodes {
                 <?php foreach ( $posts as $post ) :
                     $ev = CE_CPT::format_event( $post->ID );
                 ?>
-                <div class="ce-list-item" data-category="<?php echo esc_attr( implode( ' ', array_column( $ev['categories'], 'slug' ) ) ); ?>"
+                <?php
+                $list_filter_slugs = ( 'event_type' === $atts['filter_by'] )
+                    ? implode( ' ', array_column( $ev['types'], 'slug' ) )
+                    : implode( ' ', array_column( $ev['categories'], 'slug' ) );
+                ?>
+                <div class="ce-list-item" data-category="<?php echo esc_attr( $list_filter_slugs ); ?>"
                      style="--ce-color:<?php echo esc_attr( $ev['color'] ); ?>">
                     <div class="ce-list-date">
                         <span class="ce-day"><?php echo esc_html( date_i18n( 'd', strtotime( $ev['start'] ) ) ); ?></span>
@@ -370,6 +405,8 @@ class CE_Shortcodes {
         $atts = is_array( $atts ) ? $atts : [];
         $atts = shortcode_atts( [
             'category'    => '',
+            'event_type'  => '',
+            'filter_by'   => 'category',
             'limit'       => 6,
             'columns'     => 3,
             'show_past'   => false,
@@ -390,21 +427,25 @@ class CE_Shortcodes {
                 'terms'    => sanitize_text_field( $atts['category'] ),
             ] ];
         }
+        if ( $atts['event_type'] ) {
+            $query_args['event_type'] = sanitize_text_field( $atts['event_type'] );
+        }
 
-        $posts      = CE_CPT::get_events( $query_args );
-        $events     = array_map( fn( $p ) => CE_CPT::format_event( $p->ID ), $posts );
-        $categories = get_terms( [ 'taxonomy' => 'event_category', 'hide_empty' => true ] );
+        $posts           = CE_CPT::get_events( $query_args );
+        $events          = array_map( fn( $p ) => CE_CPT::format_event( $p->ID ), $posts );
+        $filter_taxonomy = ( 'event_type' === $atts['filter_by'] ) ? 'event_type' : 'event_category';
+        $filter_terms    = get_terms( [ 'taxonomy' => $filter_taxonomy, 'hide_empty' => true ] );
 
         ob_start();
         ?>
         <div class="ce-cards-wrap" data-ce-component="cards" style="--ce-cols:<?php echo esc_attr( $cols ); ?>">
 
-            <?php if ( ! empty( $atts['show_filter'] ) && ! is_wp_error( $categories ) && count( $categories ) > 1 ) : ?>
+            <?php if ( ! empty( $atts['show_filter'] ) && ! is_wp_error( $filter_terms ) && count( $filter_terms ) > 1 ) : ?>
             <div class="ce-filter-bar">
                 <button class="ce-filter-btn active" data-category=""><?php esc_html_e( 'All', 'club-events' ); ?></button>
-                <?php foreach ( $categories as $cat ) : ?>
-                <button class="ce-filter-btn" data-category="<?php echo esc_attr( $cat->slug ); ?>">
-                    <?php echo esc_html( $cat->name ); ?>
+                <?php foreach ( $filter_terms as $term ) : ?>
+                <button class="ce-filter-btn" data-category="<?php echo esc_attr( $term->slug ); ?>">
+                    <?php echo esc_html( $term->name ); ?>
                 </button>
                 <?php endforeach; ?>
             </div>
@@ -422,10 +463,12 @@ class CE_Shortcodes {
                     $weekday    = $start_ts ? date_i18n( 'l', $start_ts ) : '';
                     $time_start = ( $start_ts && ! $event['allDay'] ) ? date_i18n( get_option( 'time_format' ), $start_ts ) : '';
                     $time_end   = ( $end_ts   && ! $event['allDay'] ) ? date_i18n( get_option( 'time_format' ), $end_ts )   : '';
-                    $cat_slugs  = implode( ' ', array_column( $event['categories'], 'slug' ) );
+                    $filter_slugs = ( 'event_type' === $atts['filter_by'] )
+                        ? implode( ' ', array_column( $event['types'], 'slug' ) )
+                        : implode( ' ', array_column( $event['categories'], 'slug' ) );
                 ?>
                 <article class="ce-card-item"
-                         data-category="<?php echo esc_attr( $cat_slugs ); ?>"
+                         data-category="<?php echo esc_attr( $filter_slugs ); ?>"
                          style="--ce-color:<?php echo esc_attr( $event['color'] ); ?>">
 
                     <a href="<?php echo esc_url( $event['url'] ); ?>" class="ce-card-inner">
@@ -495,6 +538,14 @@ class CE_Shortcodes {
 
                             <?php if ( $event['excerpt'] ) : ?>
                             <p class="ce-card-excerpt"><?php echo esc_html( $event['excerpt'] ); ?></p>
+                            <?php endif; ?>
+
+                            <?php if ( ! empty( $event['types'] ) ) : ?>
+                            <div class="ce-card-type-badges">
+                                <?php foreach ( $event['types'] as $type ) : ?>
+                                <span class="ce-type-badge"><?php echo esc_html( $type['name'] ); ?></span>
+                                <?php endforeach; ?>
+                            </div>
                             <?php endif; ?>
 
                             <div class="ce-card-footer">

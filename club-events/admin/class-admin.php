@@ -104,11 +104,15 @@ class CE_Admin {
         }
 
         $id   = (int) ( $_POST['id'] ?? 0 );
+        $raw_types = isset( $_POST['event_types'] ) && is_array( $_POST['event_types'] )
+            ? array_map( 'sanitize_text_field', $_POST['event_types'] )
+            : [];
         $data = [
             'name'         => $_POST['name'] ?? '',
             'calendar_id'  => $_POST['calendar_id'] ?? '',
             'api_key'      => $_POST['api_key'] ?? '',
             'color'        => $_POST['color'] ?? '#3b82f6',
+            'event_types'  => implode( ',', $raw_types ),
             'sync_enabled' => ! empty( $_POST['sync_enabled'] ),
         ];
 
@@ -149,7 +153,11 @@ class CE_Admin {
     }
 
     public function page_calendars() {
-        $calendars = CE_Google_Calendar::get_calendar_list();
+        $calendars   = CE_Google_Calendar::get_calendar_list();
+        $event_types = get_terms( [ 'taxonomy' => 'event_type', 'hide_empty' => false ] );
+        if ( is_wp_error( $event_types ) ) {
+            $event_types = [];
+        }
         require CE_PLUGIN_DIR . 'admin/views/page-calendars.php';
     }
 

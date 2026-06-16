@@ -236,7 +236,7 @@ class CE_Astra_Compat {
             $classes[] = 'ce-single-event-page';
             $classes[] = 'ast-no-sidebar';
         }
-        if ( is_post_type_archive( 'club_event' ) || is_tax( [ 'event_category', 'event_tag' ] ) ) {
+        if ( is_post_type_archive( 'club_event' ) || is_tax( [ 'event_category', 'event_type', 'event_tag' ] ) ) {
             $classes[] = 'ce-archive-page';
         }
         return $classes;
@@ -257,7 +257,7 @@ class CE_Astra_Compat {
 
     /** Give the archive the full content width when there's no sidebar. */
     public function archive_content_width( string $width ): string {
-        if ( is_post_type_archive( 'club_event' ) || is_tax( [ 'event_category', 'event_tag' ] ) ) {
+        if ( is_post_type_archive( 'club_event' ) || is_tax( [ 'event_category', 'event_type', 'event_tag' ] ) ) {
             return '100';
         }
         return $width;

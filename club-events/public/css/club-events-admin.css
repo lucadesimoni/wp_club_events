@@ -263,6 +263,21 @@
 .ce-badge--green  { background: #dcfce7; color: #15803d; }
 .ce-badge--gray   { background: #f1f5f9; color: #64748b; }
 .ce-badge--yellow { background: #fef9c3; color: #854d0e; }
+.ce-badge--blue   { background: #dbeafe; color: #1d4ed8; }
+
+/* ─── Event type checkbox group ─────────────────────────────────────────── */
+.ce-checkbox-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  margin-top: 6px;
+}
+.ce-checkbox-group .ce-checkbox-label {
+  font-weight: 500;
+  text-transform: none;
+  font-size: 13px;
+  color: #374151;
+}
 
 /* ─── Forms ──────────────────────────────────────────────────────────────── */
 .ce-form-panel {
