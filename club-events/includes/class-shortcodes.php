@@ -57,6 +57,17 @@ class CE_Shortcodes {
             'editor_script'   => 'club-events-blocks',
         ] );
 
+        register_block_type( 'club-events/list', [
+            'render_callback' => [ $this, 'list_view' ],
+            'attributes'      => [
+                'category'    => [ 'type' => 'string',  'default' => '' ],
+                'event_type'  => [ 'type' => 'string',  'default' => '' ],
+                'limit'       => [ 'type' => 'number',  'default' => 5 ],
+                'show_past'   => [ 'type' => 'boolean', 'default' => false ],
+            ],
+            'editor_script'   => 'club-events-blocks',
+        ] );
+
         register_block_type( 'club-events/subscribe', [
             'render_callback' => [ $this, 'subscribe_form' ],
             'attributes'      => [],
@@ -365,9 +376,10 @@ class CE_Shortcodes {
     public function list_view( $atts = [] ) {
         $atts = is_array( $atts ) ? $atts : [];
         $atts = shortcode_atts( [
-            'category' => '',
-            'limit'    => 5,
-            'show_past' => false,
+            'category'   => '',
+            'event_type' => '',
+            'limit'      => 5,
+            'show_past'  => false,
         ], $atts, 'club_events_list' );
 
         $query_args = [ 'posts_per_page' => (int) $atts['limit'] ];
@@ -376,6 +388,9 @@ class CE_Shortcodes {
         }
         if ( $atts['category'] ) {
             $query_args['tax_query'] = [ [ 'taxonomy' => 'event_category', 'field' => 'slug', 'terms' => sanitize_text_field( $atts['category'] ) ] ];
+        }
+        if ( $atts['event_type'] ) {
+            $query_args['event_type'] = sanitize_text_field( $atts['event_type'] );
         }
 
         $posts = CE_CPT::get_events( $query_args );

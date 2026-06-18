@@ -930,13 +930,54 @@ body.ce-archive-page .ast-container {
   margin-top: 0; /* Astra handles admin-bar offset via its own JS */
 }
 
-/* ── Elementor compatibility — avoid double padding ─── */
+/* ── Elementor compatibility ─── */
 .elementor-section .ce-cards-wrap,
 .elementor-section .ce-timeline-wrap,
-.elementor-section .ce-overview-wrap {
-  padding-top: 0;
-}
+.elementor-section .ce-overview-wrap,
+.elementor-section .ce-event-list,
+.elementor-section .ce-subscribe-wrap { padding-top: 0; }
 .e-con .ce-cards-grid { gap: 20px; }
+.elementor-widget .ce-cards-wrap,
+.elementor-widget .ce-timeline-wrap,
+.elementor-widget .ce-overview-wrap,
+.elementor-widget .ce-event-list,
+.elementor-widget .ce-subscribe-wrap { max-width: 100%; box-sizing: border-box; }
+.e-con .ce-cards-wrap,
+.e-con .ce-timeline-wrap,
+.e-con .ce-overview-wrap { max-width: 100%; }
+.elementor-widget .ce-filter-bar { flex-wrap: wrap; }
+.elementor-widget .ce-calendar-grid { font-size: inherit; }
+
+/* ── WP Spectra (UAG) compatibility ─── */
+.uagb-container .ce-cards-wrap,
+.uagb-container .ce-timeline-wrap,
+.uagb-container .ce-overview-wrap,
+.uagb-container .ce-event-list,
+.uagb-container .ce-subscribe-wrap { max-width: 100%; box-sizing: border-box; }
+.uagb-section__inner-wrap .ce-cards-grid { gap: 20px; }
+.uagb-container .ce-filter-bar { flex-wrap: wrap; }
+.uagb-container .ce-calendar-grid { overflow-x: auto; }
+.spectra-container .ce-cards-wrap,
+.spectra-container .ce-timeline-wrap,
+.spectra-container .ce-overview-wrap { max-width: 100%; }
+
+/* ── Block editor (Gutenberg) compatibility ─── */
+.wp-block-club-events-timeline,
+.wp-block-club-events-overview,
+.wp-block-club-events-cards,
+.wp-block-club-events-list,
+.wp-block-club-events-subscribe { max-width: 100%; }
+.wp-block-club-events-cards.alignwide .ce-cards-grid,
+.wp-block-club-events-timeline.alignwide .ce-timeline,
+.wp-block-club-events-cards.alignfull .ce-cards-grid,
+.wp-block-club-events-timeline.alignfull .ce-timeline { max-width: 100%; }
+.ce-block-placeholder {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 40px 20px; background: #f0f0f0; border: 2px dashed #ccc; border-radius: 8px;
+  text-align: center; color: #555; min-height: 120px;
+}
+.ce-block-placeholder .dashicons { font-size: 32px; width: 32px; height: 32px; margin-bottom: 8px; color: #3b82f6; }
+.ce-block-placeholder p { margin: 0; font-size: 14px; }
 
 /* ── Astra Pro transparent header — content must clear it ─── */
 .ast-header-above-grid-enabled #content,

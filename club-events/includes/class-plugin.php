@@ -26,12 +26,15 @@ class CE_Plugin {
         require_once CE_PLUGIN_DIR . 'includes/class-shortcodes.php';
         require_once CE_PLUGIN_DIR . 'includes/class-rest-api.php';
         require_once CE_PLUGIN_DIR . 'includes/class-astra-compat.php';
+        require_once CE_PLUGIN_DIR . 'includes/class-elementor.php';
         require_once CE_PLUGIN_DIR . 'admin/class-admin.php';
     }
 
     private function init_hooks() {
         add_action( 'init', [ $this, 'load_textdomain' ] );
         add_action( 'wp_enqueue_scripts', [ $this, 'enqueue_public_assets' ] );
+        add_action( 'enqueue_block_editor_assets', [ $this, 'enqueue_editor_assets' ] );
+        add_filter( 'block_categories_all', [ $this, 'register_block_category' ], 10, 2 );
 
         new CE_CPT();
         new CE_Google_Calendar();
@@ -40,6 +43,10 @@ class CE_Plugin {
         new CE_Shortcodes();
         new CE_REST_API();
         new CE_Astra_Compat();
+
+        if ( did_action( 'elementor/loaded' ) ) {
+            new CE_Elementor();
+        }
 
         if ( is_admin() ) {
             new CE_Admin();
@@ -77,6 +84,25 @@ class CE_Plugin {
                 'addToCalendar' => __( 'Add to Calendar', 'club-events' ),
             ],
         ] );
+    }
+
+    public function enqueue_editor_assets() {
+        wp_enqueue_style(
+            'club-events-editor',
+            CE_PLUGIN_URL . 'public/css/club-events-public.css',
+            [],
+            CE_VERSION
+        );
+    }
+
+    public function register_block_category( $categories, $context ) {
+        return array_merge( [
+            [
+                'slug'  => 'club-events',
+                'title' => __( 'Club Events', 'club-events' ),
+                'icon'  => 'calendar-alt',
+            ],
+        ], $categories );
     }
 
     public static function activate() {
