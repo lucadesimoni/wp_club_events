@@ -25,6 +25,7 @@ class CE_Plugin {
         require_once CE_PLUGIN_DIR . 'includes/class-subscription.php';
         require_once CE_PLUGIN_DIR . 'includes/class-shortcodes.php';
         require_once CE_PLUGIN_DIR . 'includes/class-rest-api.php';
+        require_once CE_PLUGIN_DIR . 'includes/class-frontend-submit.php';
         require_once CE_PLUGIN_DIR . 'includes/class-astra-compat.php';
         require_once CE_PLUGIN_DIR . 'includes/class-elementor.php';
         require_once CE_PLUGIN_DIR . 'admin/class-admin.php';
@@ -42,6 +43,7 @@ class CE_Plugin {
         new CE_Subscription();
         new CE_Shortcodes();
         new CE_REST_API();
+        new CE_Frontend_Submit();
         new CE_Astra_Compat();
 
         if ( did_action( 'elementor/loaded' ) ) {
@@ -161,6 +163,12 @@ class CE_Plugin {
         if ( ! in_array( 'event_types', $cols, true ) ) {
             $wpdb->query( "ALTER TABLE {$wpdb->prefix}ce_calendars ADD COLUMN event_types varchar(500) DEFAULT '' AFTER color" );
         }
+        if ( ! in_array( 'last_sync_status', $cols, true ) ) {
+            $wpdb->query( "ALTER TABLE {$wpdb->prefix}ce_calendars ADD COLUMN last_sync_status varchar(20) DEFAULT '' AFTER last_sync" );
+        }
+        if ( ! in_array( 'last_sync_message', $cols, true ) ) {
+            $wpdb->query( "ALTER TABLE {$wpdb->prefix}ce_calendars ADD COLUMN last_sync_message varchar(500) DEFAULT '' AFTER last_sync_status" );
+        }
     }
 
     private static function set_defaults() {
@@ -172,6 +180,9 @@ class CE_Plugin {
             'ce_subscription_from_email'=> get_option( 'admin_email' ),
             'ce_future_months'          => '6',
             'ce_past_months'            => '1',
+            'ce_self_service_enabled'   => '0',
+            'ce_self_service_role'      => 'subscriber',
+            'ce_self_service_auto_publish_role' => 'editor',
         ];
         foreach ( $defaults as $key => $value ) {
             if ( false === get_option( $key ) ) {

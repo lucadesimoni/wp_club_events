@@ -9,6 +9,7 @@ class CE_Shortcodes {
         add_shortcode( 'club_events_list', [ $this, 'list_view' ] );
         add_shortcode( 'club_events_cards', [ $this, 'cards' ] );
         add_shortcode( 'club_events_subscribe', [ $this, 'subscribe_form' ] );
+        add_shortcode( 'club_events_yearly', [ $this, 'yearly' ] );
 
         add_action( 'init', [ $this, 'register_blocks' ] );
     }
@@ -71,6 +72,16 @@ class CE_Shortcodes {
         register_block_type( 'club-events/subscribe', [
             'render_callback' => [ $this, 'subscribe_form' ],
             'attributes'      => [],
+            'editor_script'   => 'club-events-blocks',
+        ] );
+
+        register_block_type( 'club-events/yearly', [
+            'render_callback' => [ $this, 'yearly' ],
+            'attributes'      => [
+                'category'   => [ 'type' => 'string',  'default' => '' ],
+                'event_type' => [ 'type' => 'string',  'default' => '' ],
+                'year'       => [ 'type' => 'number',  'default' => 0 ],
+            ],
             'editor_script'   => 'club-events-blocks',
         ] );
 
@@ -578,6 +589,109 @@ class CE_Shortcodes {
                 <?php endforeach; ?>
             </div>
             <?php endif; ?>
+        </div>
+        <?php
+        return ob_get_clean();
+    }
+
+    public function yearly( $atts = [] ) {
+        $atts = is_array( $atts ) ? $atts : [];
+        $atts = shortcode_atts( [
+            'category'   => '',
+            'event_type' => '',
+            'year'       => 0,
+        ], $atts, 'club_events_yearly' );
+
+        $year = (int) $atts['year'];
+        if ( ! $year ) {
+            $year = isset( $_GET['ce_year'] ) ? (int) $_GET['ce_year'] : (int) date( 'Y' );
+        }
+
+        $from = "$year-01-01 00:00:00";
+        $to   = "$year-12-31 23:59:59";
+
+        $query_args = [ 'from' => $from, 'to' => $to, 'posts_per_page' => 500 ];
+        if ( $atts['category'] ) {
+            $query_args['tax_query'] = [ [ 'taxonomy' => 'event_category', 'field' => 'slug', 'terms' => sanitize_text_field( $atts['category'] ) ] ];
+        }
+        if ( $atts['event_type'] ) {
+            $query_args['event_type'] = sanitize_text_field( $atts['event_type'] );
+        }
+
+        $posts = CE_CPT::get_events( $query_args );
+        $events_by_month = [];
+        foreach ( $posts as $post ) {
+            $ev = CE_CPT::format_event( $post->ID );
+            $m  = (int) date( 'n', strtotime( $ev['start'] ) );
+            $events_by_month[ $m ][] = $ev;
+        }
+
+        $current_url = remove_query_arg( 'ce_year' );
+        $prev_year   = $year - 1;
+        $next_year   = $year + 1;
+
+        ob_start();
+        ?>
+        <div class="ce-yearly-wrap" data-ce-component="yearly">
+            <div class="ce-cal-nav">
+                <a href="<?php echo esc_url( add_query_arg( 'ce_year', $prev_year, $current_url ) ); ?>" class="ce-cal-nav-btn">
+                    <svg viewBox="0 0 16 16" width="18"><path d="M10 3L5 8l5 5" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
+                </a>
+                <h3 class="ce-cal-title"><?php echo esc_html( $year ); ?></h3>
+                <a href="<?php echo esc_url( add_query_arg( 'ce_year', $next_year, $current_url ) ); ?>" class="ce-cal-nav-btn">
+                    <svg viewBox="0 0 16 16" width="18"><path d="M6 3l5 5-5 5" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
+                </a>
+            </div>
+
+            <?php
+            $month_names = [];
+            for ( $i = 1; $i <= 12; $i++ ) {
+                $month_names[ $i ] = date_i18n( 'F', mktime( 0, 0, 0, $i, 1 ) );
+            }
+
+            $today_str = date( 'Y-m-d' );
+
+            foreach ( $month_names as $m => $name ) :
+                $events = $events_by_month[ $m ] ?? [];
+                $month_class = 'ce-yearly-month' . ( empty( $events ) ? ' ce-yearly-month--empty' : '' );
+            ?>
+            <div class="<?php echo esc_attr( $month_class ); ?>">
+                <h4 class="ce-yearly-month-title"><?php echo esc_html( $name ); ?></h4>
+                <?php if ( empty( $events ) ) : ?>
+                <p class="ce-yearly-no-events"><?php esc_html_e( 'No events', 'club-events' ); ?></p>
+                <?php else : ?>
+                <div class="ce-yearly-events">
+                    <?php foreach ( $events as $ev ) :
+                        $start_ts  = strtotime( $ev['start'] );
+                        $day       = date_i18n( 'j', $start_ts );
+                        $weekday   = date_i18n( 'D', $start_ts );
+                        $time      = ( ! $ev['allDay'] ) ? date_i18n( get_option( 'time_format' ), $start_ts ) : '';
+                        $is_past   = date( 'Y-m-d', $start_ts ) < $today_str;
+                        $row_class = 'ce-yearly-event' . ( $is_past ? ' ce-yearly-event--past' : '' );
+                    ?>
+                    <a href="<?php echo esc_url( $ev['url'] ); ?>" class="<?php echo esc_attr( $row_class ); ?>"
+                       style="--ce-color:<?php echo esc_attr( $ev['color'] ); ?>">
+                        <span class="ce-yearly-event-dot"></span>
+                        <span class="ce-yearly-event-date">
+                            <?php echo esc_html( $weekday ); ?>, <?php echo esc_html( $day ); ?>.
+                        </span>
+                        <span class="ce-yearly-event-title"><?php echo esc_html( $ev['title'] ); ?></span>
+                        <?php if ( $time ) : ?>
+                        <span class="ce-yearly-event-time"><?php echo esc_html( $time ); ?></span>
+                        <?php endif; ?>
+                        <?php if ( $ev['location'] ) : ?>
+                        <span class="ce-yearly-event-loc"><?php echo esc_html( $ev['location'] ); ?></span>
+                        <?php endif; ?>
+                    </a>
+                    <?php endforeach; ?>
+                </div>
+                <?php endif; ?>
+            </div>
+            <?php endforeach; ?>
+
+            <div class="ce-yearly-total">
+                <?php printf( esc_html__( '%d events in %d', 'club-events' ), count( $posts ), $year ); ?>
+            </div>
         </div>
         <?php
         return ob_get_clean();

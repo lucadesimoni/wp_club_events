@@ -223,6 +223,48 @@
     save: function () { return null; },
   });
 
+  /* ── Yearly Agenda Block ──────────────────────────────────────────── */
+  blocks.registerBlockType('club-events/yearly', {
+    title:       __('Yearly Agenda', 'club-events'),
+    description: __('Show a full-year event agenda grouped by month.', 'club-events'),
+    icon:        'calendar',
+    category:    CATEGORY,
+    supports:    { align: ['wide', 'full'] },
+    attributes: {
+      category:   { type: 'string', default: '' },
+      event_type: { type: 'string', default: '' },
+      year:       { type: 'number', default: 0 },
+    },
+    edit: function (props) {
+      var attrs = props.attributes;
+      return el('div', null,
+        el(InspectorControls, null,
+          el(PanelBody, { title: __('Query', 'club-events'), initialOpen: true },
+            el(TextControl, {
+              label: __('Category slug', 'club-events'),
+              value: attrs.category,
+              onChange: function (v) { props.setAttributes({ category: v }); },
+            }),
+            el(TextControl, {
+              label: __('Event type slug', 'club-events'),
+              value: attrs.event_type,
+              onChange: function (v) { props.setAttributes({ event_type: v }); },
+            }),
+            el(RangeControl, {
+              label: __('Year (0 = current)', 'club-events'),
+              value: attrs.year, min: 0, max: 2099,
+              onChange: function (v) { props.setAttributes({ year: v }); },
+            })
+          )
+        ),
+        ServerSideRender
+          ? el(ServerSideRender, { block: 'club-events/yearly', attributes: attrs })
+          : placeholder('calendar', __('Yearly Agenda — preview in frontend.', 'club-events'))
+      );
+    },
+    save: function () { return null; },
+  });
+
   /* ── Subscribe Block ─────────────────────────────────────────────── */
   blocks.registerBlockType('club-events/subscribe', {
     title:       __('Events Subscribe Form', 'club-events'),

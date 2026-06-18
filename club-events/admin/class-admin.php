@@ -63,6 +63,9 @@ class CE_Admin {
             'ce_subscription_from_email',
             'ce_future_months',
             'ce_past_months',
+            'ce_self_service_enabled',
+            'ce_self_service_role',
+            'ce_self_service_auto_publish_role',
         ];
         foreach ( $options as $opt ) {
             register_setting( 'ce_settings', $opt, [ 'sanitize_callback' => 'sanitize_text_field' ] );
@@ -83,6 +86,9 @@ class CE_Admin {
             'ce_subscription_from_email' => sanitize_email( $_POST['ce_subscription_from_email'] ?? '' ),
             'ce_future_months'           => (string) max( 1, min( 24, (int) ( $_POST['ce_future_months'] ?? 6 ) ) ),
             'ce_past_months'             => (string) max( 0, min( 12, (int) ( $_POST['ce_past_months'] ?? 1 ) ) ),
+            'ce_self_service_enabled'    => isset( $_POST['ce_self_service_enabled'] ) ? '1' : '0',
+            'ce_self_service_role'       => sanitize_text_field( $_POST['ce_self_service_role'] ?? 'subscriber' ),
+            'ce_self_service_auto_publish_role' => sanitize_text_field( $_POST['ce_self_service_auto_publish_role'] ?? 'editor' ),
         ];
 
         foreach ( $settings as $key => $value ) {

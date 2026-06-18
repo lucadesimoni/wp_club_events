@@ -880,6 +880,12 @@
   .ce-card-date-badge { position: static; margin-bottom: 8px; display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; }
   .ce-card-date-day { font-size: 16px; }
   .ce-card-date-month { font-size: 10px; }
+  .ce-yearly-event { flex-wrap: wrap; gap: 6px; }
+  .ce-yearly-event-loc { max-width: 100%; }
+  .ce-submit-form .ce-form-half { grid-template-columns: 1fr; }
+  .ce-my-events-table { font-size: 13px; }
+  .ce-my-events-table th:nth-child(4),
+  .ce-my-events-table td:nth-child(4) { display: none; }
 }
 
 /* ─── Astra Theme Integration ─────────────────────────────────────────────
@@ -934,17 +940,22 @@ body.ce-archive-page .ast-container {
 .elementor-section .ce-cards-wrap,
 .elementor-section .ce-timeline-wrap,
 .elementor-section .ce-overview-wrap,
+.elementor-section .ce-yearly-wrap,
 .elementor-section .ce-event-list,
-.elementor-section .ce-subscribe-wrap { padding-top: 0; }
+.elementor-section .ce-subscribe-wrap,
+.elementor-section .ce-submit-wrap { padding-top: 0; }
 .e-con .ce-cards-grid { gap: 20px; }
 .elementor-widget .ce-cards-wrap,
 .elementor-widget .ce-timeline-wrap,
 .elementor-widget .ce-overview-wrap,
+.elementor-widget .ce-yearly-wrap,
 .elementor-widget .ce-event-list,
-.elementor-widget .ce-subscribe-wrap { max-width: 100%; box-sizing: border-box; }
+.elementor-widget .ce-subscribe-wrap,
+.elementor-widget .ce-submit-wrap { max-width: 100%; box-sizing: border-box; }
 .e-con .ce-cards-wrap,
 .e-con .ce-timeline-wrap,
-.e-con .ce-overview-wrap { max-width: 100%; }
+.e-con .ce-overview-wrap,
+.e-con .ce-yearly-wrap { max-width: 100%; }
 .elementor-widget .ce-filter-bar { flex-wrap: wrap; }
 .elementor-widget .ce-calendar-grid { font-size: inherit; }
 
@@ -952,20 +963,24 @@ body.ce-archive-page .ast-container {
 .uagb-container .ce-cards-wrap,
 .uagb-container .ce-timeline-wrap,
 .uagb-container .ce-overview-wrap,
+.uagb-container .ce-yearly-wrap,
 .uagb-container .ce-event-list,
-.uagb-container .ce-subscribe-wrap { max-width: 100%; box-sizing: border-box; }
+.uagb-container .ce-subscribe-wrap,
+.uagb-container .ce-submit-wrap { max-width: 100%; box-sizing: border-box; }
 .uagb-section__inner-wrap .ce-cards-grid { gap: 20px; }
 .uagb-container .ce-filter-bar { flex-wrap: wrap; }
 .uagb-container .ce-calendar-grid { overflow-x: auto; }
 .spectra-container .ce-cards-wrap,
 .spectra-container .ce-timeline-wrap,
-.spectra-container .ce-overview-wrap { max-width: 100%; }
+.spectra-container .ce-overview-wrap,
+.spectra-container .ce-yearly-wrap { max-width: 100%; }
 
 /* ── Block editor (Gutenberg) compatibility ─── */
 .wp-block-club-events-timeline,
 .wp-block-club-events-overview,
 .wp-block-club-events-cards,
 .wp-block-club-events-list,
+.wp-block-club-events-yearly,
 .wp-block-club-events-subscribe { max-width: 100%; }
 .wp-block-club-events-cards.alignwide .ce-cards-grid,
 .wp-block-club-events-timeline.alignwide .ce-timeline,
@@ -997,12 +1012,204 @@ body.single-club_event.ast-transparent-header .ce-event-hero {
   padding-bottom: var(--ast-section-spacing, 40px);
 }
 
+/* ─── Yearly Agenda ─────────────────────────────────────────────────────── */
+.ce-yearly-wrap { max-width: 860px; }
+
+.ce-yearly-month {
+  margin-bottom: 32px;
+}
+.ce-yearly-month--empty { margin-bottom: 16px; }
+
+.ce-yearly-month-title {
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--ce-text);
+  margin: 0 0 12px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--ce-border);
+}
+
+.ce-yearly-no-events {
+  font-size: 13px;
+  color: var(--ce-text-muted);
+  font-style: italic;
+  margin: 0;
+  padding: 0 0 0 16px;
+}
+
+.ce-yearly-events { display: flex; flex-direction: column; gap: 4px; }
+
+.ce-yearly-event {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: var(--ce-radius-sm);
+  text-decoration: none;
+  color: var(--ce-text);
+  transition: background var(--ce-transition);
+  border-left: 3px solid var(--ce-color);
+}
+.ce-yearly-event:hover { background: var(--ce-bg); }
+.ce-yearly-event--past { opacity: .55; }
+
+.ce-yearly-event-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--ce-color);
+  flex-shrink: 0;
+}
+.ce-yearly-event-date {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ce-text-muted);
+  min-width: 70px;
+  flex-shrink: 0;
+}
+.ce-yearly-event-title {
+  font-size: 14px;
+  font-weight: 600;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ce-yearly-event-time {
+  font-size: 12px;
+  color: var(--ce-text-muted);
+  flex-shrink: 0;
+}
+.ce-yearly-event-loc {
+  font-size: 12px;
+  color: var(--ce-text-muted);
+  flex-shrink: 0;
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ce-yearly-total {
+  text-align: center;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ce-text-muted);
+  padding: 16px 0;
+  border-top: 1px solid var(--ce-border);
+  margin-top: 12px;
+}
+
+/* ─── Frontend Submit Form ──────────────────────────────────────────────── */
+.ce-submit-wrap {
+  background: var(--ce-white);
+  border: 1px solid var(--ce-border);
+  border-radius: var(--ce-radius);
+  padding: 28px 24px;
+  box-shadow: var(--ce-shadow);
+}
+.ce-submit-form .ce-form-row { margin-bottom: 16px; }
+.ce-submit-form label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 5px;
+  color: var(--ce-text);
+}
+.ce-submit-form input[type="text"],
+.ce-submit-form input[type="datetime-local"],
+.ce-submit-form input[type="date"],
+.ce-submit-form textarea,
+.ce-submit-form select {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1.5px solid var(--ce-border);
+  border-radius: var(--ce-radius-sm);
+  font-size: 14px;
+  color: var(--ce-text);
+  background: var(--ce-white);
+  transition: border-color var(--ce-transition);
+  box-sizing: border-box;
+}
+.ce-submit-form input:focus,
+.ce-submit-form textarea:focus,
+.ce-submit-form select:focus {
+  outline: none;
+  border-color: var(--ce-primary);
+  box-shadow: 0 0 0 3px rgba(59,130,246,.15);
+}
+.ce-submit-form input[type="color"] {
+  width: 50px;
+  height: 36px;
+  padding: 2px;
+  border: 1.5px solid var(--ce-border);
+  border-radius: var(--ce-radius-sm);
+  cursor: pointer;
+}
+.ce-submit-form .ce-form-half {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+.ce-submit-notice {
+  background: var(--ce-primary-lt);
+  border: 1px solid var(--ce-border);
+  border-radius: var(--ce-radius);
+  padding: 16px 20px;
+  color: var(--ce-text);
+}
+.ce-submit-notice a { color: var(--ce-primary); font-weight: 600; }
+
+/* ─── My Events Table ───────────────────────────────────────────────────── */
+.ce-my-events { }
+.ce-my-events-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+.ce-my-events-table th {
+  text-align: left;
+  padding: 10px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  color: var(--ce-text-muted);
+  border-bottom: 2px solid var(--ce-border);
+}
+.ce-my-events-table td {
+  padding: 12px;
+  border-bottom: 1px solid var(--ce-border);
+  vertical-align: middle;
+}
+.ce-my-events-table tr:last-child td { border-bottom: none; }
+.ce-my-events-table strong a { color: var(--ce-text); text-decoration: none; }
+.ce-my-events-table strong a:hover { color: var(--ce-primary); }
+.ce-my-events-table small { color: var(--ce-text-muted); }
+
+.ce-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .02em;
+}
+.ce-badge--green { background: #f0fdf4; color: #16a34a; }
+.ce-badge--yellow { background: #fffbeb; color: #d97706; }
+.ce-badge--gray { background: var(--ce-bg); color: var(--ce-text-muted); }
+
 /* ── Print styles ─── */
 @media print {
   .ce-event-hero { background: #fff !important; color: #000 !important; }
   .ce-event-hero-img { display: none; }
   .ce-event-hero-content { padding: 0; }
-  .ce-btn, .ce-card-ics, .ce-filter-bar, .ce-ics-link { display: none; }
+  .ce-btn, .ce-card-ics, .ce-filter-bar, .ce-ics-link, .ce-cal-nav-btn { display: none; }
+  .ce-yearly-event--past { opacity: .7; }
+  .ce-yearly-event { border-left-width: 2px; }
   .ce-event-body-wrap { grid-template-columns: 1fr; }
   .ce-sidebar-actions { display: none; }
 }

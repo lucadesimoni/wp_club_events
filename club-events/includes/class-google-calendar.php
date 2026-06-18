@@ -41,19 +41,66 @@ class CE_Google_Calendar {
                 continue;
             }
 
-            $result = $this->sync_calendar( $cal, $api_key );
+            $result = $this->sync_with_retry( $cal, $api_key );
             $results[] = $result;
+
+            $update_data = [ 'last_sync' => current_time( 'mysql' ) ];
+            $update_fmt  = [ '%s' ];
+
+            if ( $this->has_status_columns() ) {
+                $update_data['last_sync_status']  = $result['status'];
+                $update_data['last_sync_message'] = mb_substr( $result['message'] ?? '', 0, 500 );
+                $update_fmt[] = '%s';
+                $update_fmt[] = '%s';
+            }
 
             $wpdb->update(
                 $wpdb->prefix . 'ce_calendars',
-                [ 'last_sync' => current_time( 'mysql' ) ],
+                $update_data,
                 [ 'id' => $cal->id ],
-                [ '%s' ],
+                $update_fmt,
                 [ '%d' ]
             );
+
+            if ( 'error' === $result['status'] ) {
+                $this->notify_admin_sync_failure( $cal->name, $result['message'] ?? '' );
+            }
         }
 
         return $results;
+    }
+
+    private function sync_with_retry( $cal, $api_key, $max_attempts = 3 ) {
+        $result = null;
+        for ( $attempt = 1; $attempt <= $max_attempts; $attempt++ ) {
+            $result = $this->sync_calendar( $cal, $api_key );
+            if ( 'error' !== $result['status'] ) {
+                return $result;
+            }
+            if ( $attempt < $max_attempts ) {
+                sleep( pow( 2, $attempt ) );
+            }
+        }
+        return $result;
+    }
+
+    private function has_status_columns() {
+        global $wpdb;
+        static $checked = null;
+        if ( null === $checked ) {
+            $cols    = $wpdb->get_col( "SHOW COLUMNS FROM {$wpdb->prefix}ce_calendars" );
+            $checked = in_array( 'last_sync_status', $cols, true );
+        }
+        return $checked;
+    }
+
+    private function notify_admin_sync_failure( $calendar_name, $error_message ) {
+        $admin_email = get_option( 'admin_email' );
+        $subject     = sprintf( __( '[%s] Google Calendar sync failed: %s', 'club-events' ), get_bloginfo( 'name' ), $calendar_name );
+        $message     = sprintf( __( 'The Google Calendar sync for "%s" has failed after 3 attempts.', 'club-events' ), $calendar_name ) . "\n\n"
+            . sprintf( __( 'Error: %s', 'club-events' ), $error_message ) . "\n\n"
+            . sprintf( __( 'Check settings: %s', 'club-events' ), admin_url( 'admin.php?page=ce-calendars' ) ) . "\n";
+        wp_mail( $admin_email, $subject, $message );
     }
 
     private function sync_calendar( $cal, $api_key ) {
@@ -155,6 +202,7 @@ class CE_Google_Calendar {
         return [
             'calendar' => $cal->name,
             'status'   => 'success',
+            'message'  => sprintf( '%d created, %d updated', $created, $updated ),
             'created'  => $created,
             'updated'  => $updated,
         ];

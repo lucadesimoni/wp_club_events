@@ -21,6 +21,7 @@ class CE_Elementor {
         $widgets_manager->register( new CE_Elementor_Overview() );
         $widgets_manager->register( new CE_Elementor_Cards() );
         $widgets_manager->register( new CE_Elementor_List() );
+        $widgets_manager->register( new CE_Elementor_Yearly() );
         $widgets_manager->register( new CE_Elementor_Subscribe() );
     }
 
@@ -238,6 +239,54 @@ class CE_Elementor_List extends \Elementor\Widget_Base {
     protected function render() {
         echo $this->build_shortcode( 'club_events_list', [
             'category', 'event_type', 'limit', 'show_past',
+        ] );
+    }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════ */
+/*  Widget: Yearly Agenda                                                */
+/* ═══════════════════════════════════════════════════════════════════════ */
+class CE_Elementor_Yearly extends \Elementor\Widget_Base {
+    use CE_Elementor_Controls;
+
+    public function get_name()       { return 'club-events-yearly'; }
+    public function get_title()      { return __( 'Yearly Agenda', 'club-events' ); }
+    public function get_icon()       { return 'eicon-date'; }
+    public function get_categories() { return [ 'club-events' ]; }
+    public function get_keywords()   { return [ 'events', 'yearly', 'agenda', 'annual' ]; }
+
+    protected function register_controls() {
+        $this->start_controls_section( 'section_content', [
+            'label' => __( 'Content', 'club-events' ),
+            'tab'   => \Elementor\Controls_Manager::TAB_CONTENT,
+        ] );
+
+        $this->add_control( 'category', [
+            'label'   => __( 'Category Slug', 'club-events' ),
+            'type'    => \Elementor\Controls_Manager::TEXT,
+            'default' => '',
+        ] );
+
+        $this->add_control( 'event_type', [
+            'label'   => __( 'Event Type Slug', 'club-events' ),
+            'type'    => \Elementor\Controls_Manager::TEXT,
+            'default' => '',
+        ] );
+
+        $this->add_control( 'year', [
+            'label'   => __( 'Year (0 = current)', 'club-events' ),
+            'type'    => \Elementor\Controls_Manager::NUMBER,
+            'default' => 0,
+            'min'     => 0,
+            'max'     => 2099,
+        ] );
+
+        $this->end_controls_section();
+    }
+
+    protected function render() {
+        echo $this->build_shortcode( 'club_events_yearly', [
+            'category', 'event_type', 'year',
         ] );
     }
 }
