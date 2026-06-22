@@ -12,6 +12,13 @@
 
 defined( 'ABSPATH' ) || exit;
 
+if ( version_compare( PHP_VERSION, '7.4', '<' ) ) {
+    add_action( 'admin_notices', function () {
+        echo '<div class="notice notice-error"><p><strong>Club Events Manager</strong> requires PHP 7.4 or higher. You are running PHP ' . esc_html( PHP_VERSION ) . '.</p></div>';
+    } );
+    return;
+}
+
 define( 'CE_VERSION',     '1.0.0' );
 define( 'CE_PLUGIN_FILE', __FILE__ );
 define( 'CE_PLUGIN_DIR',  plugin_dir_path( __FILE__ ) );

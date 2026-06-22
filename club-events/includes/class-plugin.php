@@ -27,7 +27,6 @@ class CE_Plugin {
         require_once CE_PLUGIN_DIR . 'includes/class-rest-api.php';
         require_once CE_PLUGIN_DIR . 'includes/class-frontend-submit.php';
         require_once CE_PLUGIN_DIR . 'includes/class-astra-compat.php';
-        require_once CE_PLUGIN_DIR . 'includes/class-elementor.php';
         require_once CE_PLUGIN_DIR . 'admin/class-admin.php';
     }
 
@@ -47,6 +46,7 @@ class CE_Plugin {
         new CE_Astra_Compat();
 
         if ( did_action( 'elementor/loaded' ) ) {
+            require_once CE_PLUGIN_DIR . 'includes/class-elementor.php';
             new CE_Elementor();
         }
 
