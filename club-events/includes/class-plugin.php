@@ -89,12 +89,13 @@ class CE_Plugin {
     }
 
     public function enqueue_editor_assets() {
-        wp_enqueue_style(
+        wp_register_style(
             'club-events-editor',
             CE_PLUGIN_URL . 'public/css/club-events-public.css',
             [],
             CE_VERSION
         );
+        wp_enqueue_style( 'club-events-editor' );
     }
 
     public function register_block_category( $categories, $context ) {

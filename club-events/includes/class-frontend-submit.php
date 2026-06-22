@@ -10,6 +10,14 @@ class CE_Frontend_Submit {
         add_action( 'wp_ajax_ce_delete_my_event', [ $this, 'handle_delete' ] );
     }
 
+    public static function render_form_static( $atts = [] ) {
+        return do_shortcode( '[club_events_submit]' );
+    }
+
+    public static function render_my_events_static( $atts = [] ) {
+        return do_shortcode( '[club_events_my_events]' );
+    }
+
     /* ─── Submit Form Shortcode ────────────────────────────────────────── */
     public function render_form( $atts = [] ) {
         if ( get_option( 'ce_self_service_enabled', '0' ) !== '1' ) {

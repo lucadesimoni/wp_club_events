@@ -280,4 +280,34 @@
     save: function () { return null; },
   });
 
+  /* ── Submit Event Block ─────────────────────────────────────────── */
+  blocks.registerBlockType('club-events/submit', {
+    title:       __('Event Submit Form', 'club-events'),
+    description: __('Frontend form for logged-in users to submit events.', 'club-events'),
+    icon:        'edit-page',
+    category:    CATEGORY,
+    attributes:  {},
+    edit: function () {
+      return ServerSideRender
+        ? el(ServerSideRender, { block: 'club-events/submit', attributes: {} })
+        : placeholder('edit-page', __('Event Submit Form — requires login on frontend.', 'club-events'));
+    },
+    save: function () { return null; },
+  });
+
+  /* ── My Events Block ────────────────────────────────────────────── */
+  blocks.registerBlockType('club-events/my-events', {
+    title:       __('My Events', 'club-events'),
+    description: __('Show logged-in user\'s submitted events with status.', 'club-events'),
+    icon:        'id-alt',
+    category:    CATEGORY,
+    attributes:  {},
+    edit: function () {
+      return ServerSideRender
+        ? el(ServerSideRender, { block: 'club-events/my-events', attributes: {} })
+        : placeholder('id-alt', __('My Events — requires login on frontend.', 'club-events'));
+    },
+    save: function () { return null; },
+  });
+
 }(window.wp.blocks, window.wp.element, window.wp.blockEditor, window.wp.components, window.wp.i18n));

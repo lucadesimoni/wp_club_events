@@ -926,6 +926,7 @@ body.ce-archive-page .ast-container {
 .ce-event-title       { font-size: var(--ast-heading-font-size-h1, 2rem); }
 .ce-card-title        { font-size: var(--ast-heading-font-size-h3, 1rem); }
 .ce-month-label,
+.ce-yearly-month-title,
 .ce-overview-list-title { font-size: var(--ast-heading-font-size-h4, .85rem); }
 
 /* ── Astra woo/shop accent — stay consistent ─── */
@@ -943,7 +944,8 @@ body.ce-archive-page .ast-container {
 .elementor-section .ce-yearly-wrap,
 .elementor-section .ce-event-list,
 .elementor-section .ce-subscribe-wrap,
-.elementor-section .ce-submit-wrap { padding-top: 0; }
+.elementor-section .ce-submit-wrap,
+.elementor-section .ce-my-events { padding-top: 0; }
 .e-con .ce-cards-grid { gap: 20px; }
 .elementor-widget .ce-cards-wrap,
 .elementor-widget .ce-timeline-wrap,
@@ -951,11 +953,14 @@ body.ce-archive-page .ast-container {
 .elementor-widget .ce-yearly-wrap,
 .elementor-widget .ce-event-list,
 .elementor-widget .ce-subscribe-wrap,
-.elementor-widget .ce-submit-wrap { max-width: 100%; box-sizing: border-box; }
+.elementor-widget .ce-submit-wrap,
+.elementor-widget .ce-my-events { max-width: 100%; box-sizing: border-box; }
 .e-con .ce-cards-wrap,
 .e-con .ce-timeline-wrap,
 .e-con .ce-overview-wrap,
-.e-con .ce-yearly-wrap { max-width: 100%; }
+.e-con .ce-yearly-wrap,
+.e-con .ce-submit-wrap,
+.e-con .ce-my-events { max-width: 100%; }
 .elementor-widget .ce-filter-bar { flex-wrap: wrap; }
 .elementor-widget .ce-calendar-grid { font-size: inherit; }
 
@@ -966,14 +971,17 @@ body.ce-archive-page .ast-container {
 .uagb-container .ce-yearly-wrap,
 .uagb-container .ce-event-list,
 .uagb-container .ce-subscribe-wrap,
-.uagb-container .ce-submit-wrap { max-width: 100%; box-sizing: border-box; }
+.uagb-container .ce-submit-wrap,
+.uagb-container .ce-my-events { max-width: 100%; box-sizing: border-box; }
 .uagb-section__inner-wrap .ce-cards-grid { gap: 20px; }
 .uagb-container .ce-filter-bar { flex-wrap: wrap; }
 .uagb-container .ce-calendar-grid { overflow-x: auto; }
 .spectra-container .ce-cards-wrap,
 .spectra-container .ce-timeline-wrap,
 .spectra-container .ce-overview-wrap,
-.spectra-container .ce-yearly-wrap { max-width: 100%; }
+.spectra-container .ce-yearly-wrap,
+.spectra-container .ce-submit-wrap,
+.spectra-container .ce-my-events { max-width: 100%; }
 
 /* ── Block editor (Gutenberg) compatibility ─── */
 .wp-block-club-events-timeline,
@@ -981,7 +989,9 @@ body.ce-archive-page .ast-container {
 .wp-block-club-events-cards,
 .wp-block-club-events-list,
 .wp-block-club-events-yearly,
-.wp-block-club-events-subscribe { max-width: 100%; }
+.wp-block-club-events-subscribe,
+.wp-block-club-events-submit,
+.wp-block-club-events-my-events { max-width: 100%; }
 .wp-block-club-events-cards.alignwide .ce-cards-grid,
 .wp-block-club-events-timeline.alignwide .ce-timeline,
 .wp-block-club-events-cards.alignfull .ce-cards-grid,

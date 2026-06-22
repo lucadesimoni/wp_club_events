@@ -86,12 +86,13 @@ class CE_Astra_Compat {
 
         /* Apply inherited fonts */
         .ce-timeline-wrap, .ce-overview-wrap, .ce-cards-wrap,
+        .ce-yearly-wrap, .ce-submit-wrap, .ce-my-events,
         .ce-event-hero, .ce-event-body-wrap, .ce-archive-wrap,
         .ce-subscribe-wrap {
             font-family: var(--ce-font-family);
         }
         .ce-event-title, .ce-card-title, .ce-month-label,
-        .ce-archive-title, .ce-sidebar-card h3 {
+        .ce-yearly-month-title, .ce-archive-title, .ce-sidebar-card h3 {
             font-family: var(--ce-heading-font-family);
         }
 
@@ -161,7 +162,8 @@ class CE_Astra_Compat {
         }
 
         /* ── Astra content spacing alignment ────────────────────────────── */
-        .ce-archive-wrap, .ce-timeline-wrap, .ce-cards-wrap, .ce-overview-wrap {
+        .ce-archive-wrap, .ce-timeline-wrap, .ce-cards-wrap,
+        .ce-overview-wrap, .ce-yearly-wrap, .ce-submit-wrap, .ce-my-events {
             padding-top: var(--ast-section-spacing, 2rem);
         }
         </style>

@@ -23,6 +23,8 @@ class CE_Elementor {
         $widgets_manager->register( new CE_Elementor_List() );
         $widgets_manager->register( new CE_Elementor_Yearly() );
         $widgets_manager->register( new CE_Elementor_Subscribe() );
+        $widgets_manager->register( new CE_Elementor_Submit() );
+        $widgets_manager->register( new CE_Elementor_MyEvents() );
     }
 
     public function frontend_styles() {
@@ -306,5 +308,41 @@ class CE_Elementor_Subscribe extends \Elementor\Widget_Base {
 
     protected function render() {
         echo do_shortcode( '[club_events_subscribe]' );
+    }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════ */
+/*  Widget: Event Submit Form                                            */
+/* ═══════════════════════════════════════════════════════════════════════ */
+class CE_Elementor_Submit extends \Elementor\Widget_Base {
+
+    public function get_name()       { return 'club-events-submit'; }
+    public function get_title()      { return __( 'Event Submit Form', 'club-events' ); }
+    public function get_icon()       { return 'eicon-form-horizontal'; }
+    public function get_categories() { return [ 'club-events' ]; }
+    public function get_keywords()   { return [ 'events', 'submit', 'form', 'self-service' ]; }
+
+    protected function register_controls() {}
+
+    protected function render() {
+        echo do_shortcode( '[club_events_submit]' );
+    }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════ */
+/*  Widget: My Events                                                    */
+/* ═══════════════════════════════════════════════════════════════════════ */
+class CE_Elementor_MyEvents extends \Elementor\Widget_Base {
+
+    public function get_name()       { return 'club-events-my-events'; }
+    public function get_title()      { return __( 'My Events', 'club-events' ); }
+    public function get_icon()       { return 'eicon-table'; }
+    public function get_categories() { return [ 'club-events' ]; }
+    public function get_keywords()   { return [ 'events', 'my', 'submitted', 'user', 'self-service' ]; }
+
+    protected function register_controls() {}
+
+    protected function render() {
+        echo do_shortcode( '[club_events_my_events]' );
     }
 }

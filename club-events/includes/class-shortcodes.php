@@ -19,7 +19,9 @@ class CE_Shortcodes {
             return;
         }
 
-        register_block_type( 'club-events/timeline', [
+        $editor = [ 'editor_script' => 'club-events-blocks', 'editor_style' => 'club-events-editor' ];
+
+        register_block_type( 'club-events/timeline', array_merge( $editor, [
             'render_callback' => [ $this, 'timeline' ],
             'attributes'      => [
                 'category'    => [ 'type' => 'string',  'default' => '' ],
@@ -29,10 +31,9 @@ class CE_Shortcodes {
                 'show_past'   => [ 'type' => 'boolean', 'default' => false ],
                 'show_filter' => [ 'type' => 'boolean', 'default' => true ],
             ],
-            'editor_script'   => 'club-events-blocks',
-        ] );
+        ] ) );
 
-        register_block_type( 'club-events/overview', [
+        register_block_type( 'club-events/overview', array_merge( $editor, [
             'render_callback' => [ $this, 'overview' ],
             'attributes'      => [
                 'category'    => [ 'type' => 'string',  'default' => '' ],
@@ -40,10 +41,9 @@ class CE_Shortcodes {
                 'filter_by'   => [ 'type' => 'string',  'default' => 'category' ],
                 'show_filter' => [ 'type' => 'boolean', 'default' => true ],
             ],
-            'editor_script'   => 'club-events-blocks',
-        ] );
+        ] ) );
 
-        register_block_type( 'club-events/cards', [
+        register_block_type( 'club-events/cards', array_merge( $editor, [
             'render_callback' => [ $this, 'cards' ],
             'attributes'      => [
                 'category'    => [ 'type' => 'string',  'default' => '' ],
@@ -55,10 +55,9 @@ class CE_Shortcodes {
                 'show_filter' => [ 'type' => 'boolean', 'default' => true ],
                 'show_image'  => [ 'type' => 'boolean', 'default' => true ],
             ],
-            'editor_script'   => 'club-events-blocks',
-        ] );
+        ] ) );
 
-        register_block_type( 'club-events/list', [
+        register_block_type( 'club-events/list', array_merge( $editor, [
             'render_callback' => [ $this, 'list_view' ],
             'attributes'      => [
                 'category'    => [ 'type' => 'string',  'default' => '' ],
@@ -66,24 +65,31 @@ class CE_Shortcodes {
                 'limit'       => [ 'type' => 'number',  'default' => 5 ],
                 'show_past'   => [ 'type' => 'boolean', 'default' => false ],
             ],
-            'editor_script'   => 'club-events-blocks',
-        ] );
+        ] ) );
 
-        register_block_type( 'club-events/subscribe', [
+        register_block_type( 'club-events/subscribe', array_merge( $editor, [
             'render_callback' => [ $this, 'subscribe_form' ],
             'attributes'      => [],
-            'editor_script'   => 'club-events-blocks',
-        ] );
+        ] ) );
 
-        register_block_type( 'club-events/yearly', [
+        register_block_type( 'club-events/yearly', array_merge( $editor, [
             'render_callback' => [ $this, 'yearly' ],
             'attributes'      => [
                 'category'   => [ 'type' => 'string',  'default' => '' ],
                 'event_type' => [ 'type' => 'string',  'default' => '' ],
                 'year'       => [ 'type' => 'number',  'default' => 0 ],
             ],
-            'editor_script'   => 'club-events-blocks',
-        ] );
+        ] ) );
+
+        register_block_type( 'club-events/submit', array_merge( $editor, [
+            'render_callback' => [ 'CE_Frontend_Submit', 'render_form_static' ],
+            'attributes'      => [],
+        ] ) );
+
+        register_block_type( 'club-events/my-events', array_merge( $editor, [
+            'render_callback' => [ 'CE_Frontend_Submit', 'render_my_events_static' ],
+            'attributes'      => [],
+        ] ) );
 
         wp_register_script(
             'club-events-blocks',
