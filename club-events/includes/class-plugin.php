@@ -28,6 +28,10 @@ class CE_Plugin {
         require_once CE_PLUGIN_DIR . 'includes/class-frontend-submit.php';
         require_once CE_PLUGIN_DIR . 'includes/class-astra-compat.php';
         require_once CE_PLUGIN_DIR . 'admin/class-admin.php';
+
+        if ( is_admin() ) {
+            require_once CE_PLUGIN_DIR . 'tools/import-aktivriege-2026.php';
+        }
     }
 
     private function init_hooks() {

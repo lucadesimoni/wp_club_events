@@ -34,3 +34,28 @@ add_action( 'plugins_loaded', 'ce_plugin' );
 
 register_activation_hook(   __FILE__, [ 'CE_Plugin', 'activate' ] );
 register_deactivation_hook( __FILE__, [ 'CE_Plugin', 'deactivate' ] );
+
+add_filter( 'gettext', 'ce_de_ui_translations', 20, 3 );
+function ce_de_ui_translations( $translated, $text, $domain ) {
+    if ( 'club-events' !== $domain ) {
+        return $translated;
+    }
+    static $map = [
+        'All'                    => 'Alle',
+        'No upcoming events.'    => 'Keine bevorstehenden Anlässe.',
+        'No events found.'       => 'Keine Anlässe gefunden.',
+        'Add to Calendar'        => 'Zum Kalender hinzufügen',
+        'Add to Calendar (.ics)' => 'Zum Kalender (.ics)',
+        'Subscribe'              => 'Abonnieren',
+        'Subscribed!'            => 'Abonniert!',
+        'Loading…'               => 'Wird geladen…',
+        'All day'                => 'Ganztägig',
+        'All-day event'          => 'Ganztägiger Anlass',
+        'Location'               => 'Ort',
+        'Details'                => 'Details',
+        'Upcoming'               => 'Bevorstehend',
+        'Past'                   => 'Vergangen',
+        'Read more'              => 'Weiterlesen',
+    ];
+    return $map[ $text ] ?? $translated;
+}
