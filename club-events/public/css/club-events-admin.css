@@ -10,9 +10,10 @@
   --ce-bg:         #f8fafc;
   --ce-white:      #ffffff;
   --ce-radius:     10px;
-  --ce-shadow:     0 1px 3px rgba(0,0,0,.08);
-  --ce-shadow-md:  0 4px 16px rgba(0,0,0,.10);
+  --ce-shadow:     0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+  --ce-shadow-md:  0 4px 16px rgba(0,0,0,.08);
   --ce-color:      var(--ce-primary);
+  --ce-transition: .2s ease;
 }
 
 /* ─── Layout ─────────────────────────────────────────────────────────────── */
@@ -46,7 +47,9 @@
   box-shadow: var(--ce-shadow);
   margin-bottom: 24px;
   overflow: hidden;
+  transition: box-shadow var(--ce-transition);
 }
+.ce-card:hover { box-shadow: var(--ce-shadow-md); }
 .ce-card-header {
   display: flex;
   align-items: center;
@@ -67,8 +70,15 @@
 .ce-card > .ce-upcoming-list, .ce-card > .ce-quick-actions,
 .ce-card > .ce-empty-state, .ce-card > .ce-setup-steps,
 .ce-card > .ce-shortcode-grid, .ce-card > .ce-feed-urls,
-.ce-card > .ce-sync-result { padding: 16px 24px; }
+.ce-card > .ce-sync-result, .ce-card > .ce-type-chips { padding: 16px 24px; }
 .ce-card > p:last-child { padding-bottom: 20px; }
+
+.ce-btn-sm {
+  font-size: 12px !important;
+  padding: 4px 12px !important;
+  height: auto !important;
+  line-height: 1.6 !important;
+}
 
 /* ─── Dashboard Stats ────────────────────────────────────────────────────── */
 .ce-dashboard-stats {
@@ -86,6 +96,11 @@
   align-items: center;
   gap: 16px;
   box-shadow: var(--ce-shadow);
+  transition: transform var(--ce-transition), box-shadow var(--ce-transition);
+}
+.ce-stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--ce-shadow-md);
 }
 .ce-stat-icon {
   width: 48px;
@@ -119,6 +134,7 @@
   gap: 14px;
   padding: 12px 0;
   border-bottom: 1px solid var(--ce-border);
+  transition: background var(--ce-transition);
 }
 .ce-upcoming-item:last-child { border-bottom: none; }
 .ce-upcoming-date {
@@ -174,13 +190,14 @@
   color: var(--ce-text);
   text-decoration: none;
   cursor: pointer;
-  transition: all .15s ease;
+  transition: all var(--ce-transition);
   font-family: inherit;
 }
 .ce-quick-btn:hover {
   border-color: var(--ce-primary);
   color: var(--ce-primary);
   background: var(--ce-primary-lt);
+  transform: translateY(-1px);
 }
 .ce-quick-btn .dashicons { color: var(--ce-primary); font-size: 18px; width: 18px; height: 18px; }
 
@@ -191,9 +208,10 @@
   border-radius: var(--ce-radius);
   padding: 12px 16px;
   font-size: 13px;
-  margin-top: 12px;
+  margin: 12px 0 24px;
+  line-height: 1.8;
 }
-.ce-sync-result.is-success { border-color: #86efac; background: #f0fdf4; color: #16a34a; }
+.ce-sync-result.is-success { border-color: #86efac; background: #f0fdf4; color: #15803d; }
 .ce-sync-result.is-error   { border-color: #fca5a5; background: #fef2f2; color: #dc2626; }
 
 /* ─── Shortcodes card ────────────────────────────────────────────────────── */
@@ -203,7 +221,9 @@
   border: 1px solid var(--ce-border);
   border-radius: var(--ce-radius);
   padding: 16px;
+  transition: border-color var(--ce-transition);
 }
+.ce-shortcode-item:hover { border-color: var(--ce-primary); }
 .ce-shortcode-item code {
   display: block;
   font-size: 14px;
@@ -239,15 +259,23 @@
   padding: 10px 16px !important;
 }
 .ce-table tbody td { padding: 12px 16px !important; vertical-align: middle; }
+.ce-table tbody tr { transition: background var(--ce-transition); }
+.ce-table tbody tr:hover { background: var(--ce-primary-lt) !important; }
 .ce-row-actions { display: flex; gap: 6px; }
 .ce-color-swatch {
   display: inline-block;
-  width: 10px;
-  height: 10px;
+  width: 12px;
+  height: 12px;
   border-radius: 50%;
   margin-right: 8px;
   vertical-align: middle;
-  border: 1px solid rgba(0,0,0,.1);
+  border: 2px solid rgba(0,0,0,.08);
+  box-shadow: 0 0 0 1px rgba(0,0,0,.05);
+}
+.ce-cal-id-code {
+  font-size: 12px;
+  color: var(--ce-muted);
+  word-break: break-all;
 }
 
 /* ─── Badges ─────────────────────────────────────────────────────────────── */
@@ -264,28 +292,123 @@
 .ce-badge--gray   { background: #f1f5f9; color: #64748b; }
 .ce-badge--yellow { background: #fef9c3; color: #854d0e; }
 .ce-badge--blue   { background: #dbeafe; color: #1d4ed8; }
+.ce-badge--type {
+  background: color-mix(in srgb, var(--badge-color, #3b82f6) 15%, #fff);
+  color: color-mix(in srgb, var(--badge-color, #3b82f6) 80%, #000);
+  border: 1px solid color-mix(in srgb, var(--badge-color, #3b82f6) 30%, transparent);
+}
 
-/* ─── Event type checkbox group ─────────────────────────────────────────── */
+/* ─── Event Types — Chip List ──────────────────────────────────────────── */
+.ce-type-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 20px 24px;
+}
+.ce-type-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: var(--ce-bg);
+  border: 1.5px solid var(--ce-border);
+  border-radius: var(--ce-radius);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ce-text);
+  transition: all var(--ce-transition);
+}
+.ce-type-chip:hover {
+  border-color: var(--ce-primary);
+  box-shadow: var(--ce-shadow);
+}
+.ce-type-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  border: 1px solid rgba(0,0,0,.1);
+}
+.ce-type-name { white-space: nowrap; }
+.ce-type-count {
+  background: var(--ce-border);
+  color: var(--ce-muted);
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 999px;
+  min-width: 16px;
+  text-align: center;
+}
+.ce-type-edit,
+.ce-type-delete {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  color: var(--ce-muted);
+  line-height: 1;
+  transition: color var(--ce-transition);
+}
+.ce-type-edit .dashicons,
+.ce-type-delete .dashicons {
+  font-size: 16px;
+  width: 16px;
+  height: 16px;
+}
+.ce-type-edit:hover { color: var(--ce-primary); }
+.ce-type-delete:hover { color: #dc2626; }
+
+/* ─── Event type checkbox chips (in calendar form) ─────────────────────── */
 .ce-checkbox-group {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px 16px;
+  gap: 8px;
   margin-top: 6px;
 }
-.ce-checkbox-group .ce-checkbox-label {
-  font-weight: 500;
-  text-transform: none;
-  font-size: 13px;
-  color: #374151;
+.ce-checkbox-chip {
+  display: inline-flex !important;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px !important;
+  background: var(--ce-white);
+  border: 1.5px solid var(--ce-border);
+  border-radius: 999px;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  text-transform: none !important;
+  color: var(--ce-text) !important;
+  cursor: pointer;
+  transition: all var(--ce-transition);
+}
+.ce-checkbox-chip:hover {
+  border-color: var(--chip-color, var(--ce-primary));
+  background: color-mix(in srgb, var(--chip-color, var(--ce-primary)) 8%, #fff);
+}
+.ce-checkbox-chip:has(input:checked) {
+  border-color: var(--chip-color, var(--ce-primary));
+  background: color-mix(in srgb, var(--chip-color, var(--ce-primary)) 12%, #fff);
+  box-shadow: 0 0 0 1px var(--chip-color, var(--ce-primary));
+}
+.ce-checkbox-chip input[type="checkbox"] {
+  width: 14px;
+  height: 14px;
+  margin: 0;
+  accent-color: var(--chip-color, var(--ce-primary));
 }
 
 /* ─── Forms ──────────────────────────────────────────────────────────────── */
 .ce-form-panel {
   border-top: 1px solid var(--ce-border);
-  background: #fafbfd;
+  background: linear-gradient(180deg, #f8fafc 0%, #fff 100%);
   padding: 20px 24px;
+  animation: ce-slide-down .25s ease;
 }
-.ce-form-panel h3 { font-size: 15px; font-weight: 700; margin: 0 0 16px; }
+@keyframes ce-slide-down {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.ce-form-panel h3 { font-size: 15px; font-weight: 700; margin: 0 0 16px; color: var(--ce-text); }
 .ce-inline-form .ce-form-row { margin-bottom: 14px; }
 .ce-inline-form label {
   display: block;
@@ -299,7 +422,15 @@
 .ce-form-half { display: flex; gap: 16px; }
 .ce-form-half > div { flex: 1; }
 .ce-form-row.ce-form-half { align-items: flex-start; }
+.ce-form-third { display: flex; gap: 16px; }
+.ce-form-third > div { flex: 1; }
 .ce-form-actions { display: flex; gap: 8px; margin-top: 20px; }
+.ce-form-actions-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding-bottom: 20px !important;
+}
 .ce-field-hint {
   display: block;
   font-size: 11px;
@@ -309,6 +440,37 @@
   letter-spacing: 0;
   margin-top: 3px;
 }
+.required { color: #dc2626; }
+
+.ce-inline-form input[type="text"],
+.ce-inline-form input[type="url"],
+.ce-inline-form input[type="email"],
+.ce-inline-form select {
+  transition: border-color var(--ce-transition), box-shadow var(--ce-transition);
+}
+.ce-inline-form input[type="text"]:focus,
+.ce-inline-form input[type="url"]:focus,
+.ce-inline-form input[type="email"]:focus,
+.ce-inline-form select:focus {
+  border-color: var(--ce-primary);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--ce-primary) 20%, transparent);
+  outline: none;
+}
+
+/* ─── Next sync indicator ────────────────────────────────────────────────── */
+.ce-next-sync {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--ce-muted);
+  background: var(--ce-bg);
+  border: 1px solid var(--ce-border);
+  border-radius: var(--ce-radius);
+  padding: 6px 14px;
+  margin: 0;
+}
+.ce-next-sync .dashicons { font-size: 16px; width: 16px; height: 16px; color: var(--ce-primary); }
 
 /* ─── Settings page ──────────────────────────────────────────────────────── */
 .ce-card .ce-form-row { padding: 0 24px; margin-bottom: 16px; }
@@ -326,6 +488,9 @@
 .ce-copy-row { display: flex; gap: 8px; }
 .ce-copy-row input { flex: 1; }
 
+/* ─── Settings grid ──────────────────────────────────────────────────────── */
+.ce-settings-grid .ce-card .ce-form-row.ce-form-third { align-items: flex-start; }
+
 /* ─── Empty state ────────────────────────────────────────────────────────── */
 .ce-empty-state { padding: 40px 24px; }
 .ce-empty-state--centered { text-align: center; }
@@ -342,14 +507,32 @@
 /* ─── Pagination ─────────────────────────────────────────────────────────── */
 .ce-pagination { padding: 16px 24px; display: flex; gap: 4px; }
 
+/* ─── WP button overrides ────────────────────────────────────────────────── */
+.ce-admin-wrap .button-primary {
+  transition: background var(--ce-transition), box-shadow var(--ce-transition);
+}
+.ce-admin-wrap .button-primary:hover {
+  box-shadow: 0 2px 8px rgba(59,130,246,.3);
+}
+.ce-admin-wrap .button-link-delete {
+  color: #dc2626 !important;
+  border-color: #fecaca !important;
+}
+.ce-admin-wrap .button-link-delete:hover {
+  background: #fef2f2 !important;
+  border-color: #dc2626 !important;
+}
+
 /* ─── Responsive ─────────────────────────────────────────────────────────── */
 @media (max-width: 900px) {
   .ce-dashboard-grid { grid-template-columns: 1fr; }
   .ce-dashboard-stats { grid-template-columns: 1fr 1fr; }
   .ce-shortcode-grid { grid-template-columns: 1fr; }
+  .ce-form-third { flex-direction: column; }
 }
 @media (max-width: 600px) {
   .ce-dashboard-stats { grid-template-columns: 1fr; }
   .ce-form-half { flex-direction: column; }
   .ce-quick-actions { grid-template-columns: 1fr; }
+  .ce-type-chips { gap: 6px; }
 }

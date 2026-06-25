@@ -10,7 +10,10 @@ class CE_Admin {
         add_action( 'wp_ajax_ce_save_calendar', [ $this, 'ajax_save_calendar' ] );
         add_action( 'wp_ajax_ce_delete_calendar', [ $this, 'ajax_delete_calendar' ] );
         add_action( 'wp_ajax_ce_delete_subscriber', [ $this, 'ajax_delete_subscriber' ] );
+        add_action( 'wp_ajax_ce_save_event_type', [ $this, 'ajax_save_event_type' ] );
+        add_action( 'wp_ajax_ce_delete_event_type', [ $this, 'ajax_delete_event_type' ] );
         add_action( 'admin_post_ce_save_settings', [ $this, 'handle_save_settings' ] );
+        add_action( 'admin_post_ce_save_calendar_settings', [ $this, 'handle_save_calendar_settings' ] );
     }
 
     public function register_menus() {
@@ -49,20 +52,21 @@ class CE_Admin {
                 'sync_error'     => __( 'Sync failed. Check your API key and calendar ID.', 'club-events' ),
                 'saving'         => __( 'Saving…', 'club-events' ),
                 'saved'          => __( 'Saved!', 'club-events' ),
+                'add_type'       => __( 'Add Event Type', 'club-events' ),
+                'edit_type'      => __( 'Edit Event Type', 'club-events' ),
+                'save_type'      => __( 'Save Type', 'club-events' ),
+                'add_calendar'   => __( 'Add Calendar', 'club-events' ),
+                'edit_calendar'  => __( 'Edit Calendar', 'club-events' ),
             ],
         ] );
     }
 
     public function register_settings() {
         $options = [
-            'ce_google_api_key',
-            'ce_sync_interval',
             'ce_ics_feed_enabled',
             'ce_subscription_enabled',
             'ce_subscription_from_name',
             'ce_subscription_from_email',
-            'ce_future_months',
-            'ce_past_months',
             'ce_self_service_enabled',
             'ce_self_service_role',
             'ce_self_service_auto_publish_role',
@@ -78,17 +82,33 @@ class CE_Admin {
         }
 
         $settings = [
-            'ce_google_api_key'          => sanitize_text_field( $_POST['ce_google_api_key'] ?? '' ),
-            'ce_sync_interval'           => sanitize_text_field( $_POST['ce_sync_interval'] ?? 'hourly' ),
             'ce_ics_feed_enabled'        => isset( $_POST['ce_ics_feed_enabled'] ) ? '1' : '0',
             'ce_subscription_enabled'    => isset( $_POST['ce_subscription_enabled'] ) ? '1' : '0',
             'ce_subscription_from_name'  => sanitize_text_field( $_POST['ce_subscription_from_name'] ?? '' ),
             'ce_subscription_from_email' => sanitize_email( $_POST['ce_subscription_from_email'] ?? '' ),
-            'ce_future_months'           => (string) max( 1, min( 24, (int) ( $_POST['ce_future_months'] ?? 6 ) ) ),
-            'ce_past_months'             => (string) max( 0, min( 12, (int) ( $_POST['ce_past_months'] ?? 1 ) ) ),
             'ce_self_service_enabled'    => isset( $_POST['ce_self_service_enabled'] ) ? '1' : '0',
             'ce_self_service_role'       => sanitize_text_field( $_POST['ce_self_service_role'] ?? 'subscriber' ),
             'ce_self_service_auto_publish_role' => sanitize_text_field( $_POST['ce_self_service_auto_publish_role'] ?? 'editor' ),
+        ];
+
+        foreach ( $settings as $key => $value ) {
+            update_option( $key, $value );
+        }
+
+        wp_redirect( add_query_arg( [ 'page' => 'ce-settings', 'saved' => '1' ], admin_url( 'admin.php' ) ) );
+        exit;
+    }
+
+    public function handle_save_calendar_settings() {
+        if ( ! current_user_can( 'manage_options' ) || ! check_admin_referer( 'ce_save_calendar_settings' ) ) {
+            wp_die( esc_html__( 'Security check failed.', 'club-events' ) );
+        }
+
+        $settings = [
+            'ce_google_api_key' => sanitize_text_field( $_POST['ce_google_api_key'] ?? '' ),
+            'ce_sync_interval'  => sanitize_text_field( $_POST['ce_sync_interval'] ?? 'hourly' ),
+            'ce_future_months'  => (string) max( 1, min( 24, (int) ( $_POST['ce_future_months'] ?? 6 ) ) ),
+            'ce_past_months'    => (string) max( 0, min( 12, (int) ( $_POST['ce_past_months'] ?? 1 ) ) ),
         ];
 
         foreach ( $settings as $key => $value ) {
@@ -99,7 +119,7 @@ class CE_Admin {
         wp_clear_scheduled_hook( 'ce_google_calendar_sync' );
         wp_schedule_event( time(), $interval, 'ce_google_calendar_sync' );
 
-        wp_redirect( add_query_arg( [ 'page' => 'ce-settings', 'saved' => '1' ], admin_url( 'admin.php' ) ) );
+        wp_redirect( add_query_arg( [ 'page' => 'ce-calendars', 'saved' => '1' ], admin_url( 'admin.php' ) ) );
         exit;
     }
 
@@ -149,6 +169,66 @@ class CE_Admin {
         wp_send_json_success();
     }
 
+    public function ajax_save_event_type() {
+        check_ajax_referer( 'ce_admin_nonce', 'nonce' );
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_send_json_error( 'Insufficient permissions.' );
+        }
+
+        $term_id = (int) ( $_POST['term_id'] ?? 0 );
+        $name    = sanitize_text_field( $_POST['name'] ?? '' );
+        $color   = sanitize_hex_color( $_POST['color'] ?? '' ) ?: '#3b82f6';
+
+        if ( empty( $name ) ) {
+            wp_send_json_error( __( 'Name is required.', 'club-events' ) );
+        }
+
+        if ( $term_id ) {
+            $result = wp_update_term( $term_id, 'event_type', [ 'name' => $name ] );
+            if ( is_wp_error( $result ) ) {
+                wp_send_json_error( $result->get_error_message() );
+            }
+            update_term_meta( $term_id, '_ce_color', $color );
+            $term = get_term( $term_id, 'event_type' );
+            wp_send_json_success( [
+                'action'  => 'updated',
+                'term_id' => $term_id,
+                'name'    => $term->name,
+                'slug'    => $term->slug,
+                'color'   => $color,
+                'count'   => $term->count,
+            ] );
+        } else {
+            $result = wp_insert_term( $name, 'event_type' );
+            if ( is_wp_error( $result ) ) {
+                wp_send_json_error( $result->get_error_message() );
+            }
+            $new_id = $result['term_id'];
+            update_term_meta( $new_id, '_ce_color', $color );
+            $term = get_term( $new_id, 'event_type' );
+            wp_send_json_success( [
+                'action'  => 'created',
+                'term_id' => $new_id,
+                'name'    => $term->name,
+                'slug'    => $term->slug,
+                'color'   => $color,
+                'count'   => 0,
+            ] );
+        }
+    }
+
+    public function ajax_delete_event_type() {
+        check_ajax_referer( 'ce_admin_nonce', 'nonce' );
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_send_json_error( 'Insufficient permissions.' );
+        }
+        $term_id = (int) ( $_POST['term_id'] ?? 0 );
+        if ( $term_id ) {
+            wp_delete_term( $term_id, 'event_type' );
+        }
+        wp_send_json_success();
+    }
+
     public function page_dashboard() {
         $total_events = wp_count_posts( 'club_event' )->publish ?? 0;
         global $wpdb;
@@ -163,6 +243,9 @@ class CE_Admin {
         $event_types = get_terms( [ 'taxonomy' => 'event_type', 'hide_empty' => false ] );
         if ( is_wp_error( $event_types ) ) {
             $event_types = [];
+        }
+        foreach ( $event_types as $et ) {
+            $et->color = get_term_meta( $et->term_id, '_ce_color', true ) ?: '#3b82f6';
         }
         require CE_PLUGIN_DIR . 'admin/views/page-calendars.php';
     }
