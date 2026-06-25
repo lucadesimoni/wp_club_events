@@ -319,6 +319,35 @@
     });
   });
 
+  /* ─── Dashboard view toggle ────────────────────────────────────────────── */
+  var STORAGE_KEY = 'ce_dash_view';
+  var toggleBtns = document.querySelectorAll('.ce-view-toggle-btn');
+  if (toggleBtns.length) {
+    var saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) switchView(saved);
+
+    toggleBtns.forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        switchView(btn.dataset.view);
+      });
+    });
+  }
+
+  function switchView(view) {
+    var views = document.querySelectorAll('.ce-dash-view');
+    var btns  = document.querySelectorAll('.ce-view-toggle-btn');
+    var found = false;
+    views.forEach(function (v) {
+      if (v.dataset.view === view) { v.hidden = false; found = true; }
+      else { v.hidden = true; }
+    });
+    if (!found) return;
+    btns.forEach(function (b) {
+      b.classList.toggle('active', b.dataset.view === view);
+    });
+    localStorage.setItem(STORAGE_KEY, view);
+  }
+
   /* ─── Copy to clipboard ───────────────────────────────────────────────── */
   document.addEventListener('click', function (e) {
     var btn = e.target.closest('.ce-copy-btn');

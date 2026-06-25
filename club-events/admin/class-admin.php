@@ -234,7 +234,12 @@ class CE_Admin {
         global $wpdb;
         $total_subs    = (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$wpdb->prefix}ce_subscribers WHERE confirmed = 1" );
         $total_cals    = (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$wpdb->prefix}ce_calendars" );
-        $upcoming      = CE_CPT::get_events( [ 'from' => date( 'Y-m-d H:i:s' ), 'posts_per_page' => 5 ] );
+        $upcoming      = CE_CPT::get_events( [ 'from' => date( 'Y-m-d H:i:s' ), 'posts_per_page' => 20 ] );
+        $event_types   = get_terms( [ 'taxonomy' => 'event_type', 'hide_empty' => false ] );
+        if ( is_wp_error( $event_types ) ) {
+            $event_types = [];
+        }
+        $type_count = count( $event_types );
         require CE_PLUGIN_DIR . 'admin/views/page-dashboard.php';
     }
 
