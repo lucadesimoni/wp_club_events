@@ -33,23 +33,199 @@
                 <div class="ce-stat-label"><?php esc_html_e( 'Google Calendars', 'club-events' ); ?></div>
             </div>
         </div>
+        <div class="ce-stat-card">
+            <div class="ce-stat-icon ce-stat-icon--orange">
+                <span class="dashicons dashicons-tag"></span>
+            </div>
+            <div class="ce-stat-body">
+                <div class="ce-stat-value"><?php echo esc_html( $type_count ); ?></div>
+                <div class="ce-stat-label"><?php esc_html_e( 'Event Types', 'club-events' ); ?></div>
+            </div>
+        </div>
     </div>
 
-    <div class="ce-dashboard-grid">
-        <div class="ce-card">
-            <div class="ce-card-header">
-                <h2><?php esc_html_e( 'Upcoming Events', 'club-events' ); ?></h2>
-                <a href="<?php echo esc_url( admin_url( 'edit.php?post_type=club_event' ) ); ?>" class="ce-card-link">
-                    <?php esc_html_e( 'View all', 'club-events' ); ?> →
-                </a>
+    <!-- ── Upcoming Events — switchable views ───────────────────── -->
+    <div class="ce-card">
+        <div class="ce-card-header">
+            <h2><?php esc_html_e( 'Upcoming Events', 'club-events' ); ?>
+                <span class="ce-count-badge"><?php echo esc_html( count( $upcoming ) ); ?></span>
+            </h2>
+            <div class="ce-view-toggle">
+                <button class="ce-view-toggle-btn active" data-view="tiles" title="<?php esc_attr_e( 'Tiles', 'club-events' ); ?>">
+                    <span class="dashicons dashicons-grid-view"></span>
+                </button>
+                <button class="ce-view-toggle-btn" data-view="table" title="<?php esc_attr_e( 'Table', 'club-events' ); ?>">
+                    <span class="dashicons dashicons-list-view"></span>
+                </button>
+                <button class="ce-view-toggle-btn" data-view="timeline" title="<?php esc_attr_e( 'Timeline', 'club-events' ); ?>">
+                    <span class="dashicons dashicons-editor-ul"></span>
+                </button>
             </div>
-            <?php if ( empty( $upcoming ) ) : ?>
-            <p class="ce-empty-state"><?php esc_html_e( 'No upcoming events. Create your first event!', 'club-events' ); ?></p>
-            <?php else : ?>
+        </div>
+
+        <?php if ( empty( $upcoming ) ) : ?>
+        <div class="ce-empty-state ce-empty-state--centered">
+            <span class="dashicons dashicons-calendar-alt ce-empty-icon"></span>
+            <p><?php esc_html_e( 'No upcoming events. Create your first event!', 'club-events' ); ?></p>
+            <a href="<?php echo esc_url( admin_url( 'post-new.php?post_type=club_event' ) ); ?>" class="button button-primary">
+                <?php esc_html_e( 'Add Event', 'club-events' ); ?>
+            </a>
+        </div>
+        <?php else : ?>
+
+        <!-- ── TILES VIEW ──────────────────────────────────────── -->
+        <div class="ce-dash-view ce-dash-tiles" data-view="tiles">
+            <div class="ce-tiles-grid">
+                <?php foreach ( $upcoming as $post ) :
+                    $start    = get_post_meta( $post->ID, '_ce_start_date', true );
+                    $end      = get_post_meta( $post->ID, '_ce_end_date', true );
+                    $color    = get_post_meta( $post->ID, '_ce_color', true ) ?: '#3b82f6';
+                    $location = get_post_meta( $post->ID, '_ce_location', true );
+                    $all_day  = get_post_meta( $post->ID, '_ce_all_day', true );
+                    $source   = get_post_meta( $post->ID, '_ce_source', true ) ?: 'manual';
+                    $types    = wp_get_post_terms( $post->ID, 'event_type', [ 'fields' => 'names' ] );
+                    if ( is_wp_error( $types ) ) $types = [];
+                ?>
+                <div class="ce-tile" style="--tile-color:<?php echo esc_attr( $color ); ?>">
+                    <div class="ce-tile-date">
+                        <?php if ( $start ) : ?>
+                        <span class="ce-tile-day"><?php echo esc_html( date_i18n( 'd', strtotime( $start ) ) ); ?></span>
+                        <span class="ce-tile-month"><?php echo esc_html( date_i18n( 'M', strtotime( $start ) ) ); ?></span>
+                        <?php endif; ?>
+                    </div>
+                    <div class="ce-tile-body">
+                        <a href="<?php echo esc_url( get_edit_post_link( $post->ID ) ); ?>" class="ce-tile-title">
+                            <?php echo esc_html( $post->post_title ); ?>
+                        </a>
+                        <?php if ( $start ) : ?>
+                        <span class="ce-tile-meta">
+                            <span class="dashicons dashicons-clock"></span>
+                            <?php
+                            if ( $all_day ) {
+                                esc_html_e( 'All day', 'club-events' );
+                            } else {
+                                echo esc_html( date_i18n( get_option( 'time_format' ), strtotime( $start ) ) );
+                                if ( $end ) {
+                                    echo ' – ' . esc_html( date_i18n( get_option( 'time_format' ), strtotime( $end ) ) );
+                                }
+                            }
+                            ?>
+                        </span>
+                        <?php endif; ?>
+                        <?php if ( $location ) : ?>
+                        <span class="ce-tile-meta">
+                            <span class="dashicons dashicons-location"></span>
+                            <?php echo esc_html( $location ); ?>
+                        </span>
+                        <?php endif; ?>
+                        <?php if ( ! empty( $types ) ) : ?>
+                        <div class="ce-tile-types">
+                            <?php foreach ( array_slice( $types, 0, 2 ) as $type_name ) : ?>
+                            <span class="ce-tile-type-badge"><?php echo esc_html( $type_name ); ?></span>
+                            <?php endforeach; ?>
+                        </div>
+                        <?php endif; ?>
+                    </div>
+                    <div class="ce-tile-source">
+                        <?php if ( 'google' === $source ) : ?>
+                        <span class="ce-tile-source-dot ce-tile-source--google" title="Google Calendar"></span>
+                        <?php else : ?>
+                        <span class="ce-tile-source-dot ce-tile-source--manual" title="Manual"></span>
+                        <?php endif; ?>
+                    </div>
+                </div>
+                <?php endforeach; ?>
+            </div>
+        </div>
+
+        <!-- ── TABLE VIEW ──────────────────────────────────────── -->
+        <div class="ce-dash-view ce-dash-table" data-view="table" hidden>
+            <table class="wp-list-table widefat fixed striped ce-table">
+                <thead>
+                    <tr>
+                        <th class="ce-th-date"><?php esc_html_e( 'Date', 'club-events' ); ?></th>
+                        <th><?php esc_html_e( 'Event', 'club-events' ); ?></th>
+                        <th><?php esc_html_e( 'Time', 'club-events' ); ?></th>
+                        <th><?php esc_html_e( 'Location', 'club-events' ); ?></th>
+                        <th><?php esc_html_e( 'Type', 'club-events' ); ?></th>
+                        <th><?php esc_html_e( 'Source', 'club-events' ); ?></th>
+                        <th class="ce-th-actions"><?php esc_html_e( 'Actions', 'club-events' ); ?></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ( $upcoming as $post ) :
+                        $start    = get_post_meta( $post->ID, '_ce_start_date', true );
+                        $end      = get_post_meta( $post->ID, '_ce_end_date', true );
+                        $color    = get_post_meta( $post->ID, '_ce_color', true ) ?: '#3b82f6';
+                        $location = get_post_meta( $post->ID, '_ce_location', true );
+                        $all_day  = get_post_meta( $post->ID, '_ce_all_day', true );
+                        $source   = get_post_meta( $post->ID, '_ce_source', true ) ?: 'manual';
+                        $types    = wp_get_post_terms( $post->ID, 'event_type', [ 'fields' => 'names' ] );
+                        if ( is_wp_error( $types ) ) $types = [];
+                    ?>
+                    <tr>
+                        <td>
+                            <span class="ce-color-swatch" style="background:<?php echo esc_attr( $color ); ?>"></span>
+                            <?php echo $start ? esc_html( date_i18n( 'D, d M Y', strtotime( $start ) ) ) : '—'; ?>
+                        </td>
+                        <td>
+                            <strong>
+                                <a href="<?php echo esc_url( get_edit_post_link( $post->ID ) ); ?>">
+                                    <?php echo esc_html( $post->post_title ); ?>
+                                </a>
+                            </strong>
+                        </td>
+                        <td>
+                            <?php
+                            if ( $all_day ) {
+                                esc_html_e( 'All day', 'club-events' );
+                            } elseif ( $start ) {
+                                echo esc_html( date_i18n( get_option( 'time_format' ), strtotime( $start ) ) );
+                                if ( $end ) {
+                                    echo ' – ' . esc_html( date_i18n( get_option( 'time_format' ), strtotime( $end ) ) );
+                                }
+                            } else {
+                                echo '—';
+                            }
+                            ?>
+                        </td>
+                        <td><?php echo esc_html( $location ?: '—' ); ?></td>
+                        <td>
+                            <?php if ( ! empty( $types ) ) : ?>
+                                <?php foreach ( $types as $tn ) : ?>
+                                <span class="ce-badge ce-badge--blue"><?php echo esc_html( $tn ); ?></span>
+                                <?php endforeach; ?>
+                            <?php else : ?>
+                                <span class="ce-hint">—</span>
+                            <?php endif; ?>
+                        </td>
+                        <td>
+                            <?php if ( 'google' === $source ) : ?>
+                            <span class="ce-badge ce-badge--blue"><?php esc_html_e( 'Google', 'club-events' ); ?></span>
+                            <?php else : ?>
+                            <span class="ce-badge ce-badge--gray"><?php esc_html_e( 'Manual', 'club-events' ); ?></span>
+                            <?php endif; ?>
+                        </td>
+                        <td class="ce-row-actions">
+                            <a href="<?php echo esc_url( get_edit_post_link( $post->ID ) ); ?>" class="button button-small">
+                                <?php esc_html_e( 'Edit', 'club-events' ); ?>
+                            </a>
+                            <a href="<?php echo esc_url( get_permalink( $post->ID ) ); ?>" target="_blank" class="button button-small">
+                                <?php esc_html_e( 'View', 'club-events' ); ?>
+                            </a>
+                        </td>
+                    </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- ── TIMELINE VIEW ───────────────────────────────────── -->
+        <div class="ce-dash-view ce-dash-timeline" data-view="timeline" hidden>
             <ul class="ce-upcoming-list">
                 <?php foreach ( $upcoming as $post ) :
-                    $start = get_post_meta( $post->ID, '_ce_start_date', true );
-                    $color = get_post_meta( $post->ID, '_ce_color', true ) ?: '#3b82f6';
+                    $start    = get_post_meta( $post->ID, '_ce_start_date', true );
+                    $color    = get_post_meta( $post->ID, '_ce_color', true ) ?: '#3b82f6';
                     $location = get_post_meta( $post->ID, '_ce_location', true );
                 ?>
                 <li class="ce-upcoming-item" style="--ce-color:<?php echo esc_attr( $color ); ?>">
@@ -75,9 +251,18 @@
                 </li>
                 <?php endforeach; ?>
             </ul>
-            <?php endif; ?>
         </div>
 
+        <div class="ce-card-footer-link">
+            <a href="<?php echo esc_url( admin_url( 'edit.php?post_type=club_event' ) ); ?>">
+                <?php esc_html_e( 'View all events', 'club-events' ); ?> →
+            </a>
+        </div>
+        <?php endif; ?>
+    </div>
+
+    <!-- ── Quick Actions + Shortcodes side-by-side ──────────── -->
+    <div class="ce-dashboard-grid">
         <div class="ce-card">
             <div class="ce-card-header">
                 <h2><?php esc_html_e( 'Quick Actions', 'club-events' ); ?></h2>
@@ -110,53 +295,48 @@
             </div>
             <div id="ce-sync-result" class="ce-sync-result" hidden></div>
         </div>
-    </div>
 
-    <div class="ce-card ce-shortcodes-card">
-        <div class="ce-card-header">
-            <h2><?php esc_html_e( 'Shortcodes & Blocks', 'club-events' ); ?></h2>
-        </div>
-        <div class="ce-shortcode-grid">
-            <div class="ce-shortcode-item">
-                <code>[club_events_timeline]</code>
-                <p><?php esc_html_e( 'Vertical timeline of upcoming events with month groupings.', 'club-events' ); ?></p>
-                <div class="ce-shortcode-attrs">
-                    <span><code>limit="20"</code></span>
-                    <span><code>category="slug"</code></span>
-                    <span><code>show_past="true"</code></span>
-                    <span><code>show_filter="true"</code></span>
-                </div>
+        <div class="ce-card ce-shortcodes-card">
+            <div class="ce-card-header">
+                <h2><?php esc_html_e( 'Shortcodes & Blocks', 'club-events' ); ?></h2>
             </div>
-            <div class="ce-shortcode-item">
-                <code>[club_events_overview]</code>
-                <p><?php esc_html_e( 'Monthly calendar grid overview with event dots and list.', 'club-events' ); ?></p>
-                <div class="ce-shortcode-attrs">
-                    <span><code>category="slug"</code></span>
-                    <span><code>show_filter="true"</code></span>
+            <div class="ce-shortcode-list">
+                <div class="ce-shortcode-item-compact">
+                    <code>[club_events_timeline]</code>
+                    <span><?php esc_html_e( 'Vertical timeline with month groups', 'club-events' ); ?></span>
                 </div>
-            </div>
-            <div class="ce-shortcode-item">
-                <code>[club_events_cards]</code>
-                <p><?php esc_html_e( 'Responsive card grid — embeds in any page or post.', 'club-events' ); ?></p>
-                <div class="ce-shortcode-attrs">
-                    <span><code>columns="3"</code></span>
-                    <span><code>limit="6"</code></span>
-                    <span><code>category="slug"</code></span>
-                    <span><code>show_image="true"</code></span>
-                    <span><code>show_filter="true"</code></span>
+                <div class="ce-shortcode-item-compact">
+                    <code>[club_events_overview]</code>
+                    <span><?php esc_html_e( 'Monthly calendar grid + event list', 'club-events' ); ?></span>
                 </div>
-            </div>
-            <div class="ce-shortcode-item">
-                <code>[club_events_list]</code>
-                <p><?php esc_html_e( 'Compact upcoming events list for sidebars or widgets.', 'club-events' ); ?></p>
-                <div class="ce-shortcode-attrs">
-                    <span><code>limit="5"</code></span>
-                    <span><code>category="slug"</code></span>
+                <div class="ce-shortcode-item-compact">
+                    <code>[club_events_cards]</code>
+                    <span><?php esc_html_e( 'Responsive card grid', 'club-events' ); ?></span>
                 </div>
-            </div>
-            <div class="ce-shortcode-item">
-                <code>[club_events_subscribe]</code>
-                <p><?php esc_html_e( 'Email subscription form with double opt-in confirmation.', 'club-events' ); ?></p>
+                <div class="ce-shortcode-item-compact">
+                    <code>[club_events_tiles]</code>
+                    <span><?php esc_html_e( 'Tiles preview, filterable by type', 'club-events' ); ?></span>
+                </div>
+                <div class="ce-shortcode-item-compact">
+                    <code>[club_events_yearly]</code>
+                    <span><?php esc_html_e( 'Full-year agenda by month', 'club-events' ); ?></span>
+                </div>
+                <div class="ce-shortcode-item-compact">
+                    <code>[club_events_list]</code>
+                    <span><?php esc_html_e( 'Compact list for sidebars', 'club-events' ); ?></span>
+                </div>
+                <div class="ce-shortcode-item-compact">
+                    <code>[club_events_subscribe]</code>
+                    <span><?php esc_html_e( 'Email subscription form', 'club-events' ); ?></span>
+                </div>
+                <div class="ce-shortcode-item-compact">
+                    <code>[club_events_submit]</code>
+                    <span><?php esc_html_e( 'Frontend event submission', 'club-events' ); ?></span>
+                </div>
+                <div class="ce-shortcode-item-compact">
+                    <code>[club_events_my_events]</code>
+                    <span><?php esc_html_e( 'User event dashboard', 'club-events' ); ?></span>
+                </div>
             </div>
         </div>
     </div>
