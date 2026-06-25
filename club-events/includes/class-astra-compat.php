@@ -4,21 +4,14 @@ defined( 'ABSPATH' ) || exit;
 /**
  * Astra (Free + Premium) theme compatibility layer.
  *
- * Handles:
- *  - CSS variable bridging (--ast-global-color-* → --ce-*)
- *  - Template structure (Astra container / sidebar wrappers)
- *  - Page-title / banner integration (hide Astra's title on single events — we have our own hero)
- *  - Sidebar layout control
- *  - Breadcrumb integration
- *  - Event JSON-LD schema (works with Astra SEO / RankMath / Yoast)
- *  - Body classes
- *  - Admin meta-box page-type registration
+ * Bridges every Astra design token into --ce-* custom properties so the
+ * plugin automatically inherits the active palette, typography, button
+ * styles, input styles, spacing and border-radius — zero manual config.
  */
 class CE_Astra_Compat {
 
     private static ?bool $is_astra = null;
 
-    /** Returns true when Astra (any flavour) is the active theme. */
     public static function is_active(): bool {
         if ( null === self::$is_astra ) {
             $theme          = wp_get_theme();
@@ -40,79 +33,257 @@ class CE_Astra_Compat {
         add_filter( 'astra_page_layout',  [ $this, 'single_event_layout' ]         );
         add_filter( 'astra_content_width',[ $this, 'archive_content_width' ]       );
 
-        // Hide Astra's built-in page-title bar on single events (our hero replaces it)
         add_filter( 'astra_banner_visibility',      [ $this, 'hide_title_bar_on_single' ] );
         add_filter( 'astra_the_title_enabled',      [ $this, 'hide_title_bar_on_single' ] );
         add_filter( 'astra_title_bar_enabled',      [ $this, 'hide_title_bar_on_single' ] );
-        // Astra Pro 4.x uses this filter
         add_filter( 'astra_addon_banner_visibility',[ $this, 'hide_title_bar_on_single' ] );
 
-        // Breadcrumb items
         add_filter( 'astra_breadcrumb_trail_items', [ $this, 'event_breadcrumbs' ], 10, 2 );
 
-        // Astra Pro — register our CPT for the Layouts meta-box
         add_filter( 'astra_metabox_page_types', [ $this, 'register_for_metabox' ] );
 
-        // Remove Astra's default entry-header inside the loop for single events
-        // so the title is not duplicated (we render it in our hero section)
         add_action( 'astra_single_post_before_content', [ $this, 'maybe_suppress_entry_header' ] );
     }
 
     // ─── CSS Variable Bridge ──────────────────────────────────────────────
 
-    /**
-     * Maps Astra's design tokens into --ce-* custom properties so the plugin
-     * automatically inherits the active Astra colour palette and typography.
-     */
     public function bridge_css_vars(): void {
         ?>
         <style id="ce-astra-bridge">
+        /* ═══════════════════════════════════════════════════════════════════
+         *  Astra → Club Events design-token bridge
+         *  Maps every relevant Astra CSS variable into --ce-* equivalents.
+         *  When Astra vars are absent, fallbacks keep the plugin usable.
+         * ═══════════════════════════════════════════════════════════════════ */
         :root {
-            /* Colour — fall back to plugin defaults when Astra vars are absent */
-            --ce-primary:    var(--ast-global-color-0,    #3b82f6);
-            --ce-primary-dk: var(--ast-global-color-1,    #1d4ed8);
-            --ce-text:       var(--ast-global-color-4,    #1e293b);
-            --ce-text-muted: var(--ast-global-color-5,    #64748b);
-            --ce-border:     var(--ast-border-color,      #e2e8f0);
-            --ce-bg:         var(--ast-main-header-bg-color-responsive, #f8fafc);
+            /* ── Colour palette ──────────────────────────────────────────── */
+            --ce-primary:      var(--ast-global-color-0, #3b82f6);
+            --ce-primary-dk:   var(--ast-global-color-1, #1d4ed8);
+            --ce-primary-lt:   color-mix(in srgb, var(--ast-global-color-0, #3b82f6) 10%, #fff);
+            --ce-accent:       var(--ast-global-color-2, var(--ce-primary));
+            --ce-text:         var(--ast-global-color-3, #1e293b);
+            --ce-text-muted:   var(--ast-global-color-5, #64748b);
+            --ce-heading-color:var(--ast-global-color-2, var(--ce-text));
+            --ce-border:       var(--ast-border-color, #e2e8f0);
+            --ce-bg:           var(--ast-global-color-7, #f8fafc);
+            --ce-white:        var(--ast-global-color-6, #ffffff);
+            --ce-link:         var(--ast-global-color-0, var(--ce-primary));
+            --ce-link-hover:   var(--ast-global-color-1, var(--ce-primary-dk));
 
-            /* Typography — inherit Astra's font stack */
-            --ce-font-family:         var(--ast-body-font-family,    inherit);
-            --ce-heading-font-family: var(--ast-heading-font-family, inherit);
+            /* ── Typography ──────────────────────────────────────────────── */
+            --ce-font-family:         var(--ast-body-font-family, inherit);
+            --ce-heading-font-family: var(--ast-heading-font-family, var(--ce-font-family));
+            --ce-body-font-size:      var(--ast-body-font-size, 16px);
+            --ce-body-line-height:    var(--ast-body-line-height, 1.65);
+            --ce-body-font-weight:    var(--ast-body-font-weight, 400);
+            --ce-heading-font-weight: var(--ast-heading-font-weight, 700);
+            --ce-heading-line-height: var(--ast-heading-line-height, 1.3);
 
-            /* Spacing — mirror Astra's content horizontal padding */
+            /* ── Heading sizes ───────────────────────────────────────────── */
+            --ce-h1-size: var(--ast-heading-font-size-h1, 2rem);
+            --ce-h2-size: var(--ast-heading-font-size-h2, 1.6rem);
+            --ce-h3-size: var(--ast-heading-font-size-h3, 1.2rem);
+            --ce-h4-size: var(--ast-heading-font-size-h4, 1rem);
+            --ce-h5-size: var(--ast-heading-font-size-h5, .875rem);
+
+            /* ── Buttons ─────────────────────────────────────────────────── */
+            --ce-btn-bg:          var(--ast-global-color-0, var(--ce-primary));
+            --ce-btn-bg-hover:    var(--ast-global-color-1, var(--ce-primary-dk));
+            --ce-btn-color:       var(--ast-global-color-6, #fff);
+            --ce-btn-color-hover: var(--ast-global-color-6, #fff);
+            --ce-btn-radius:      var(--ast-button-border-radius, 6px);
+            --ce-btn-font-size:   var(--ast-button-font-size, 14px);
+            --ce-btn-font-weight: var(--ast-button-font-weight, 600);
+            --ce-btn-text-transform: var(--ast-button-text-transform, none);
+            --ce-btn-letter-spacing: var(--ast-button-letter-spacing, normal);
+            --ce-btn-padding-h:   var(--ast-button-h-padding, 18px);
+            --ce-btn-padding-v:   var(--ast-button-v-padding, 8px);
+
+            /* ── Inputs ──────────────────────────────────────────────────── */
+            --ce-input-border:    var(--ast-border-color, #e2e8f0);
+            --ce-input-focus:     var(--ast-global-color-0, var(--ce-primary));
+            --ce-input-radius:    var(--ast-button-border-radius, 4px);
+            --ce-input-bg:        var(--ast-global-color-6, #fff);
+            --ce-input-color:     var(--ast-global-color-3, var(--ce-text));
+
+            /* ── Spacing & Layout ────────────────────────────────────────── */
             --ce-content-padding: var(--ast-content-spacing, 20px);
+            --ce-section-spacing: var(--ast-section-spacing, 2rem);
+            --ce-radius:          var(--ast-button-border-radius, 10px);
+            --ce-radius-sm:       max(2px, calc(var(--ast-button-border-radius, 6px) - 2px));
         }
 
-        /* Apply inherited fonts */
+        /* ── Apply inherited fonts ────────────────────────────────────── */
         .ce-timeline-wrap, .ce-overview-wrap, .ce-cards-wrap,
         .ce-yearly-wrap, .ce-submit-wrap, .ce-my-events,
         .ce-event-hero, .ce-event-body-wrap, .ce-archive-wrap,
-        .ce-subscribe-wrap {
+        .ce-subscribe-wrap, .ce-event-list {
             font-family: var(--ce-font-family);
+            font-size: var(--ce-body-font-size);
+            line-height: var(--ce-body-line-height);
+            color: var(--ce-text);
         }
         .ce-event-title, .ce-card-title, .ce-month-label,
-        .ce-yearly-month-title, .ce-archive-title, .ce-sidebar-card h3 {
+        .ce-yearly-month-title, .ce-archive-title, .ce-sidebar-card h3,
+        .ce-subscribe-title, .ce-cal-title, .ce-overview-list-title {
             font-family: var(--ce-heading-font-family);
+            font-weight: var(--ce-heading-font-weight);
+            line-height: var(--ce-heading-line-height);
+            color: var(--ce-heading-color);
         }
 
-        /* ── Primary-colour accent for light tint ──────────────────────── */
-        .ce-filter-btn.active, .ce-filter-btn:hover,
-        .ce-btn-primary, .ce-btn-primary:hover {
+        /* ── Heading sizes ────────────────────────────────────────────── */
+        .ce-event-hero .ce-event-title { font-size: var(--ce-h1-size); color: #fff !important; }
+        .ce-archive-title              { font-size: var(--ce-h1-size); }
+        .ce-subscribe-title            { font-size: var(--ce-h3-size); }
+        .ce-overview-list-title        { font-size: var(--ce-h4-size); }
+        .ce-card-title                 { font-size: var(--ce-h5-size); }
+        .ce-month-label,
+        .ce-yearly-month-title         { font-size: var(--ce-h5-size); }
+
+        /* ── Links ────────────────────────────────────────────────────── */
+        .ce-event-title a,
+        .ce-card-title,
+        .ce-list-title,
+        .ce-upcoming-title,
+        .ce-yearly-event-title { color: var(--ce-text); }
+        .ce-event-title a:hover,
+        .ce-card-item:hover .ce-card-title,
+        .ce-list-title:hover,
+        .ce-upcoming-title:hover { color: var(--ce-link); }
+        .ce-card-cta,
+        .ce-card-link,
+        .ce-back-link:hover { color: var(--ce-link); }
+
+        /* ── Buttons ──────────────────────────────────────────────────── */
+        .ce-btn {
+            font-family: var(--ce-font-family);
+            font-size: var(--ce-btn-font-size);
+            font-weight: var(--ce-btn-font-weight);
+            text-transform: var(--ce-btn-text-transform);
+            letter-spacing: var(--ce-btn-letter-spacing);
+            border-radius: var(--ce-btn-radius);
+            padding: var(--ce-btn-padding-v) var(--ce-btn-padding-h);
+        }
+        .ce-btn-primary {
+            background: var(--ce-btn-bg);
+            border-color: var(--ce-btn-bg);
+            color: var(--ce-btn-color) !important;
+        }
+        .ce-btn-primary:hover {
+            background: var(--ce-btn-bg-hover);
+            border-color: var(--ce-btn-bg-hover);
+            color: var(--ce-btn-color-hover) !important;
+        }
+        .ce-btn-outline {
+            border-color: var(--ce-border);
+            color: var(--ce-text-muted) !important;
+        }
+        .ce-btn-outline:hover {
+            border-color: var(--ce-link);
+            color: var(--ce-link) !important;
+        }
+
+        /* ── Filter bar — match Astra button feel ─────────────────────── */
+        .ce-filter-btn {
+            font-family: var(--ce-font-family);
+            border-radius: var(--ce-btn-radius);
+            font-size: var(--ce-btn-font-size);
+            font-weight: var(--ce-btn-font-weight);
+            letter-spacing: var(--ce-btn-letter-spacing);
+        }
+        .ce-filter-btn:hover,
+        .ce-filter-btn.active {
+            background: var(--ce-btn-bg);
+            border-color: var(--ce-btn-bg);
+            color: var(--ce-btn-color);
+        }
+
+        /* ── Form inputs — match Astra form styling ───────────────────── */
+        .ce-subscribe-form input[type="text"],
+        .ce-subscribe-form input[type="email"],
+        .ce-submit-form input[type="text"],
+        .ce-submit-form input[type="datetime-local"],
+        .ce-submit-form input[type="date"],
+        .ce-submit-form textarea,
+        .ce-submit-form select {
+            font-family: var(--ce-font-family);
+            font-size: var(--ce-body-font-size);
+            color: var(--ce-input-color);
+            background: var(--ce-input-bg);
+            border-color: var(--ce-input-border);
+            border-radius: var(--ce-input-radius);
+        }
+        .ce-subscribe-form input:focus,
+        .ce-submit-form input:focus,
+        .ce-submit-form textarea:focus,
+        .ce-submit-form select:focus {
+            border-color: var(--ce-input-focus);
+            box-shadow: 0 0 0 3px color-mix(in srgb, var(--ce-input-focus) 15%, transparent);
+        }
+
+        /* ── Cards — inherit Astra surface tokens ─────────────────────── */
+        .ce-card-item,
+        .ce-timeline-body,
+        .ce-sidebar-card,
+        .ce-subscribe-wrap,
+        .ce-submit-wrap {
+            background: var(--ce-white);
+            border-color: var(--ce-border);
+            border-radius: var(--ce-radius);
+        }
+
+        /* ── Calendar grid ────────────────────────────────────────────── */
+        .ce-calendar-grid {
+            border-color: var(--ce-border);
+            border-radius: var(--ce-radius);
+        }
+        .ce-cal-header { background: var(--ce-bg); color: var(--ce-text-muted); }
+        .ce-cal-day    { background: var(--ce-white); }
+        .ce-cal-empty  { background: var(--ce-bg); }
+        .ce-cal-today .ce-cal-day-num { background: var(--ce-primary); color: var(--ce-btn-color); }
+
+        /* ── Category / type badges ───────────────────────────────────── */
+        .ce-category-badge {
+            background: var(--ce-primary-lt);
+            color: var(--ce-primary);
+            border-radius: var(--ce-btn-radius);
+        }
+        .ce-category-badge:hover {
             background: var(--ce-primary);
-            border-color: var(--ce-primary);
+            color: var(--ce-btn-color);
         }
 
-        /* ── Full-bleed hero inside Astra content column ───────────────── */
-        /* Breaks the hero out of the narrow content column to span the viewport */
+        /* ── Yearly agenda ────────────────────────────────────────────── */
+        .ce-yearly-event:hover   { background: var(--ce-bg); }
+        .ce-yearly-month-title   { border-bottom-color: var(--ce-border); }
+        .ce-yearly-event-date    { color: var(--ce-text-muted); }
+        .ce-yearly-event-time,
+        .ce-yearly-event-loc     { color: var(--ce-text-muted); }
+
+        /* ── Subscribe form ───────────────────────────────────────────── */
+        .ce-subscribe-wrap {
+            background: var(--ce-white);
+            border-color: var(--ce-border);
+        }
+        .ce-subscribe-title { color: var(--ce-heading-color); }
+        .ce-subscribe-desc  { color: var(--ce-text-muted); }
+
+        /* ── Single event hero ────────────────────────────────────────── */
+        .ce-event-hero {
+            border-radius: var(--ce-radius);
+        }
+        .ce-meta-pill {
+            font-family: var(--ce-font-family);
+        }
+
+        /* ── Full-bleed hero inside Astra content column ──────────────── */
         .ce-single-event .ce-event-hero {
             width:       100vw;
             margin-left: calc(50% - 50vw);
             margin-right:calc(50% - 50vw);
             border-radius: 0;
         }
-
-        /* Compensate when Astra scrollbar-width offset is applied */
         @supports (scrollbar-gutter: stable) {
             .ce-single-event .ce-event-hero {
                 width:        calc(100vw - var(--ast-scrollbar-width, 0px));
@@ -121,7 +292,7 @@ class CE_Astra_Compat {
             }
         }
 
-        /* ── Astra "No Sidebar" layout — let our 2-col grid handle layout ─ */
+        /* ── Astra layout ─────────────────────────────────────────────── */
         body.single-club_event #primary.content-area {
             width: 100%;
             max-width: 100%;
@@ -129,7 +300,6 @@ class CE_Astra_Compat {
         }
         body.single-club_event #secondary { display: none; }
 
-        /* ── Respect Astra container for archive ───────────────────────── */
         body.post-type-archive-club_event .ast-container > #primary,
         body.tax-event_category .ast-container > #primary,
         body.tax-event_tag      .ast-container > #primary {
@@ -137,35 +307,136 @@ class CE_Astra_Compat {
             min-width: 0;
         }
 
-        /* ── Astra separate-container (boxed layout) border fix ─────────── */
-        .ast-separate-container .ce-event-hero {
-            border-radius: 0;
-        }
+        .ast-separate-container .ce-event-hero { border-radius: 0; }
 
-        /* ── Astra transparent / sticky header — z-index safety ────────── */
-        #masthead, .main-header-bar, .ast-primary-sticky-header {
-            z-index: 1000 !important;
-        }
-        .ce-filter-bar, .ce-cal-nav {
-            z-index: 10;
-        }
+        /* ── Z-index safety ───────────────────────────────────────────── */
+        #masthead, .main-header-bar, .ast-primary-sticky-header { z-index: 1000 !important; }
+        .ce-filter-bar, .ce-cal-nav { z-index: 10; }
 
-        /* ── Astra Pro — hide entry-title on single events (in our hero) ── */
+        /* ── Hide Astra entry-title on single events ──────────────────── */
         body.single-club_event .ast-separate-container .ast-article-single .entry-header,
         body.single-club_event .ast-plain-container .ast-article-single .entry-header,
         body.single-club_event .entry-header .entry-title { display: none; }
 
-        /* ── Astra button class passthrough ─────────────────────────────── */
-        .ce-btn { letter-spacing: var(--ast-button-letter-spacing, normal); }
-        .ce-btn-primary {
-            border-radius: var(--ast-button-border-radius, 6px);
+        /* ── Content spacing ──────────────────────────────────────────── */
+        .ce-archive-wrap, .ce-timeline-wrap, .ce-cards-wrap,
+        .ce-overview-wrap, .ce-yearly-wrap, .ce-submit-wrap,
+        .ce-my-events, .ce-event-list {
+            padding-top: var(--ce-section-spacing);
         }
 
-        /* ── Astra content spacing alignment ────────────────────────────── */
-        .ce-archive-wrap, .ce-timeline-wrap, .ce-cards-wrap,
-        .ce-overview-wrap, .ce-yearly-wrap, .ce-submit-wrap, .ce-my-events {
-            padding-top: var(--ast-section-spacing, 2rem);
+        /* ── ICS link, view buttons — match Astra feel ────────────────── */
+        .ce-ics-link,
+        .ce-cal-nav-btn,
+        .ce-view-btn {
+            border-color: var(--ce-border);
+            color: var(--ce-text-muted);
+            border-radius: var(--ce-btn-radius);
         }
+        .ce-ics-link:hover,
+        .ce-cal-nav-btn:hover,
+        .ce-view-btn:hover {
+            border-color: var(--ce-link);
+            color: var(--ce-link);
+        }
+
+        /* ── Event list items ─────────────────────────────────────────── */
+        .ce-list-item,
+        .ce-event-list-item { border-color: var(--ce-border); }
+        .ce-event-list-item a { color: var(--ce-text); }
+        .ce-event-list-item a:hover { color: var(--ce-link); }
+
+        /* ── Sidebar ──────────────────────────────────────────────────── */
+        .ce-sidebar-card {
+            background: var(--ce-white);
+            border-color: var(--ce-border);
+        }
+        .ce-sidebar-card h3 { color: var(--ce-text-muted); border-color: var(--ce-border); }
+        .ce-detail-icon { background: var(--ce-primary-lt); color: var(--ce-primary); }
+        .ce-detail-row strong { color: var(--ce-text-muted); }
+        .ce-detail-row p { color: var(--ce-text); }
+
+        /* ── My Events table ──────────────────────────────────────────── */
+        .ce-my-events-table {
+            font-family: var(--ce-font-family);
+        }
+        .ce-my-events-table th { color: var(--ce-text-muted); border-color: var(--ce-border); }
+        .ce-my-events-table td { border-color: var(--ce-border); }
+        .ce-my-events-table strong a { color: var(--ce-text); }
+        .ce-my-events-table strong a:hover { color: var(--ce-link); }
+
+        /* ── Astra Pro transparent header ──────────────────────────────── */
+        body.single-club_event.ast-transparent-header .ce-event-hero {
+            padding-top: calc(var(--ast-transparent-header-logo-width, 80px) + 40px);
+        }
+        .ast-header-above-grid-enabled #content,
+        .ast-header-below-grid-enabled #content {
+            position: relative;
+            z-index: 1;
+        }
+
+        /* ── Astra separate-container spacing ─────────────────────────── */
+        .ast-separate-container .ce-event-body-wrap,
+        .ast-separate-container .ce-archive-wrap {
+            padding-left: 0;
+            padding-right: 0;
+        }
+
+        /* ── Page content bottom spacing ──────────────────────────────── */
+        .ce-archive-wrap,
+        .site-main > .ce-single-event {
+            padding-bottom: var(--ce-section-spacing);
+        }
+
+        /* ── Breadcrumb ───────────────────────────────────────────────── */
+        .ce-breadcrumb-wrap { padding: 10px 0 0; font-size: 13px; }
+        .ce-breadcrumb-wrap .astra-breadcrumbs { padding: 0; background: none; }
+
+        /* ── Astra woo accent ─────────────────────────────────────────── */
+        .ast-woocommerce-container .ce-btn-primary { background: var(--ce-btn-bg); }
+
+        /* ── Admin bar ────────────────────────────────────────────────── */
+        .admin-bar .ce-event-hero { margin-top: 0; }
+
+        /* ── Card date badge — match Astra surface ────────────────────── */
+        .ce-card-date-badge {
+            background: var(--ce-white);
+            border-color: var(--ce-border);
+            border-radius: var(--ce-radius-sm);
+        }
+
+        /* ── Timeline dot / line — use palette ────────────────────────── */
+        .ce-timeline-item::before { background: var(--ce-border); }
+        .ce-timeline-body { border-color: var(--ce-border); }
+
+        /* ── Archive toolbar ──────────────────────────────────────────── */
+        .ce-view-switcher {
+            background: var(--ce-bg);
+            border-color: var(--ce-border);
+        }
+        .ce-view-btn.active, .ce-view-btn:hover {
+            background: var(--ce-white);
+            color: var(--ce-primary);
+        }
+
+        /* ── Card ICS icon ────────────────────────────────────────────── */
+        .ce-card-ics {
+            border-color: var(--ce-border);
+            color: var(--ce-text-muted);
+        }
+        .ce-card-ics:hover {
+            border-color: var(--ce-link);
+            color: var(--ce-link);
+            background: var(--ce-primary-lt);
+        }
+
+        /* ── Card footer border ───────────────────────────────────────── */
+        .ce-card-footer { border-color: var(--ce-border); }
+
+        /* ── Meta colours ─────────────────────────────────────────────── */
+        .ce-meta-item, .ce-card-meta-row,
+        .ce-list-location, .ce-event-list-date,
+        .ce-event-list-loc { color: var(--ce-text-muted); }
         </style>
         <?php
     }
@@ -224,7 +495,6 @@ class CE_Astra_Compat {
             $schema['image'] = get_the_post_thumbnail_url( $post_id, 'large' );
         }
 
-        // Event status
         $schema['eventStatus']        = 'https://schema.org/EventScheduled';
         $schema['eventAttendanceMode'] = 'https://schema.org/OfflineEventAttendanceMode';
 
@@ -246,10 +516,6 @@ class CE_Astra_Compat {
 
     // ─── Layout ───────────────────────────────────────────────────────────
 
-    /**
-     * Force "no sidebar" layout on single event pages — our template manages
-     * its own two-column layout inside the content column.
-     */
     public function single_event_layout( string $layout ): string {
         if ( is_singular( 'club_event' ) ) {
             return 'no-sidebar';
@@ -257,7 +523,6 @@ class CE_Astra_Compat {
         return $layout;
     }
 
-    /** Give the archive the full content width when there's no sidebar. */
     public function archive_content_width( string $width ): string {
         if ( is_post_type_archive( 'club_event' ) || is_tax( [ 'event_category', 'event_type', 'event_tag' ] ) ) {
             return '100';
@@ -267,10 +532,6 @@ class CE_Astra_Compat {
 
     // ─── Title Bar ────────────────────────────────────────────────────────
 
-    /**
-     * Hides Astra's page-title banner on single events.
-     * The plugin's own hero section renders the title + meta.
-     */
     public function hide_title_bar_on_single( $value ) {
         if ( is_singular( 'club_event' ) ) {
             return false;
@@ -278,22 +539,15 @@ class CE_Astra_Compat {
         return $value;
     }
 
-    /** Remove the entry-header inside the loop (duplicate of hero title). */
     public function maybe_suppress_entry_header(): void {
         if ( ! is_singular( 'club_event' ) ) {
             return;
         }
-        // Astra outputs entry-header via astra_single_post_before_content
         remove_action( 'astra_single_post_before_content', 'astra_entry_header_template' );
     }
 
     // ─── Breadcrumbs ─────────────────────────────────────────────────────
 
-    /**
-     * Inject event-specific breadcrumb items into Astra's breadcrumb trail.
-     *
-     * Trail becomes: Home > Events > [Category] > Event Title
-     */
     public function event_breadcrumbs( array $items, array $args ): array {
         if ( ! is_singular( 'club_event' ) && ! is_post_type_archive( 'club_event' ) ) {
             return $items;
@@ -302,7 +556,6 @@ class CE_Astra_Compat {
         $archive_url   = get_post_type_archive_link( 'club_event' );
         $archive_label = __( 'Events', 'club-events' );
 
-        // Build fresh trail rather than relying on Astra's auto-detection
         $trail = [
             '<a href="' . esc_url( home_url() ) . '">' . __( 'Home', 'club-events' ) . '</a>',
             '<a href="' . esc_url( $archive_url ) . '">' . esc_html( $archive_label ) . '</a>',
@@ -323,10 +576,6 @@ class CE_Astra_Compat {
 
     // ─── Admin ────────────────────────────────────────────────────────────
 
-    /**
-     * Register the `club_event` post type with Astra Pro's page-specific
-     * settings meta-box so users can override layout per-event.
-     */
     public function register_for_metabox( array $types ): array {
         $types[] = 'club_event';
         return $types;
