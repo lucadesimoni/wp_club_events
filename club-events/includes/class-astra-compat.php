@@ -144,13 +144,19 @@ class CE_Astra_Compat {
         /* ── Links ────────────────────────────────────────────────────── */
         .ce-event-title a,
         .ce-card-title,
+        .ce-tile-card-title,
         .ce-list-title,
         .ce-upcoming-title,
         .ce-yearly-event-title { color: var(--ce-text); }
         .ce-event-title a:hover,
         .ce-card-item:hover .ce-card-title,
+        .ce-tile-card:hover .ce-tile-card-title,
         .ce-list-title:hover,
         .ce-upcoming-title:hover { color: var(--ce-link); }
+        .ce-tile-card-title { border-bottom-color: var(--ce-primary); }
+        .ce-tile-card-cta { color: var(--ce-link); }
+        .ce-tile-card-date { color: var(--ce-text-muted); }
+        .ce-tile-card-excerpt { color: var(--ce-text); }
         .ce-card-cta,
         .ce-card-link,
         .ce-back-link:hover { color: var(--ce-link); }

@@ -85,12 +85,16 @@ class CE_Shortcodes {
         register_block_type( 'club-events/tiles', array_merge( $editor, [
             'render_callback' => [ $this, 'tiles' ],
             'attributes'      => [
-                'event_type'  => [ 'type' => 'string',  'default' => '' ],
-                'category'    => [ 'type' => 'string',  'default' => '' ],
-                'limit'       => [ 'type' => 'number',  'default' => 6 ],
-                'columns'     => [ 'type' => 'number',  'default' => 3 ],
-                'show_image'  => [ 'type' => 'boolean', 'default' => true ],
-                'show_excerpt' => [ 'type' => 'boolean', 'default' => true ],
+                'event_type'    => [ 'type' => 'string',  'default' => '' ],
+                'category'      => [ 'type' => 'string',  'default' => '' ],
+                'limit'         => [ 'type' => 'number',  'default' => 6 ],
+                'columns'       => [ 'type' => 'number',  'default' => 3 ],
+                'show_image'    => [ 'type' => 'boolean', 'default' => true ],
+                'show_excerpt'  => [ 'type' => 'boolean', 'default' => true ],
+                'show_location' => [ 'type' => 'boolean', 'default' => false ],
+                'show_time'     => [ 'type' => 'boolean', 'default' => false ],
+                'show_types'    => [ 'type' => 'boolean', 'default' => false ],
+                'cta'           => [ 'type' => 'string',  'default' => 'Weiterlesen' ],
             ],
         ] ) );
 
@@ -719,12 +723,16 @@ class CE_Shortcodes {
     public function tiles( $atts = [], $content = '' ) {
         $atts = is_array( $atts ) ? $atts : [];
         $atts = shortcode_atts( [
-            'event_type'   => '',
-            'category'     => '',
-            'limit'        => 6,
-            'columns'      => 3,
-            'show_image'   => true,
-            'show_excerpt' => true,
+            'event_type'    => '',
+            'category'      => '',
+            'limit'         => 6,
+            'columns'       => 3,
+            'show_image'    => true,
+            'show_excerpt'  => true,
+            'show_location' => false,
+            'show_time'     => false,
+            'show_types'    => false,
+            'cta'           => __( 'Weiterlesen', 'club-events' ),
         ], $atts, 'club_events_tiles' );
 
         $cols = max( 1, min( 4, (int) $atts['columns'] ) );
@@ -758,9 +766,7 @@ class CE_Shortcodes {
                 <?php foreach ( $events as $event ) :
                     $start_ts   = $event['start'] ? strtotime( $event['start'] ) : null;
                     $end_ts     = $event['end']   ? strtotime( $event['end'] )   : null;
-                    $month      = $start_ts ? date_i18n( 'M', $start_ts ) : '';
-                    $day        = $start_ts ? date_i18n( 'j', $start_ts ) : '';
-                    $weekday    = $start_ts ? date_i18n( 'D', $start_ts ) : '';
+                    $date_label = $start_ts ? date_i18n( 'j. F Y', $start_ts ) : '';
                     $time_start = ( $start_ts && ! $event['allDay'] ) ? date_i18n( get_option( 'time_format' ), $start_ts ) : '';
                     $time_end   = ( $end_ts   && ! $event['allDay'] ) ? date_i18n( get_option( 'time_format' ), $end_ts )   : '';
                 ?>
@@ -786,46 +792,34 @@ class CE_Shortcodes {
                     <?php endif; ?>
 
                     <div class="ce-tile-card-body">
-                        <?php if ( $start_ts ) : ?>
-                        <div class="ce-tile-card-date">
-                            <span class="ce-tile-card-day"><?php echo esc_html( $day ); ?></span>
-                            <span class="ce-tile-card-month"><?php echo esc_html( $month ); ?></span>
-                        </div>
+                        <?php if ( $date_label ) : ?>
+                        <span class="ce-tile-card-date"><?php echo esc_html( strtoupper( $date_label ) ); ?></span>
                         <?php endif; ?>
 
                         <h3 class="ce-tile-card-title"><?php echo esc_html( $event['title'] ); ?></h3>
 
-                        <div class="ce-tile-card-meta">
-                            <?php if ( $weekday && $time_start ) : ?>
-                            <div class="ce-tile-card-meta-row">
-                                <svg viewBox="0 0 16 16" width="13" height="13" fill="none"><circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.2"/><path d="M8 4.5V8l2.5 1.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
-                                <span><?php echo esc_html( $weekday ); ?>, <?php echo esc_html( $time_start ); ?><?php echo $time_end ? ' – ' . esc_html( $time_end ) : ''; ?></span>
-                            </div>
-                            <?php elseif ( $start_ts ) : ?>
-                            <div class="ce-tile-card-meta-row">
-                                <svg viewBox="0 0 16 16" width="13" height="13" fill="none"><rect x="2" y="3" width="12" height="11" rx="1.5" stroke="currentColor" stroke-width="1.2"/><path d="M5 2v2M11 2v2M2 7h12" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
-                                <span><?php echo esc_html( $event['allDay'] ? $weekday . ' · ' . __( 'All day', 'club-events' ) : $weekday ); ?></span>
-                            </div>
-                            <?php endif; ?>
+                        <?php if ( ! empty( $atts['show_time'] ) && $time_start ) : ?>
+                        <span class="ce-tile-card-time"><?php echo esc_html( $time_start ); ?><?php echo $time_end ? ' – ' . esc_html( $time_end ) : ''; ?></span>
+                        <?php endif; ?>
 
-                            <?php if ( $event['location'] ) : ?>
-                            <div class="ce-tile-card-meta-row">
-                                <svg viewBox="0 0 16 16" width="13" height="13" fill="none"><path d="M8 1.5a4.5 4.5 0 0 1 4.5 4.5c0 3.5-4.5 8.5-4.5 8.5S3.5 9.5 3.5 6A4.5 4.5 0 0 1 8 1.5z" stroke="currentColor" stroke-width="1.2"/><circle cx="8" cy="6" r="1.5" fill="currentColor"/></svg>
-                                <span><?php echo esc_html( $event['location'] ); ?></span>
-                            </div>
-                            <?php endif; ?>
-                        </div>
+                        <?php if ( ! empty( $atts['show_location'] ) && $event['location'] ) : ?>
+                        <span class="ce-tile-card-location"><?php echo esc_html( $event['location'] ); ?></span>
+                        <?php endif; ?>
 
                         <?php if ( ! empty( $atts['show_excerpt'] ) && $event['excerpt'] ) : ?>
                         <p class="ce-tile-card-excerpt"><?php echo esc_html( $event['excerpt'] ); ?></p>
                         <?php endif; ?>
 
-                        <?php if ( ! empty( $event['types'] ) ) : ?>
+                        <?php if ( ! empty( $atts['show_types'] ) && ! empty( $event['types'] ) ) : ?>
                         <div class="ce-tile-card-types">
                             <?php foreach ( $event['types'] as $type ) : ?>
                             <span class="ce-type-badge"><?php echo esc_html( $type['name'] ); ?></span>
                             <?php endforeach; ?>
                         </div>
+                        <?php endif; ?>
+
+                        <?php if ( $atts['cta'] ) : ?>
+                        <span class="ce-tile-card-cta"><?php echo esc_html( $atts['cta'] ); ?> →</span>
                         <?php endif; ?>
                     </div>
                 </a>

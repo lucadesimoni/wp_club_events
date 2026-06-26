@@ -853,12 +853,12 @@
 }
 .ce-card-ics svg { stroke: currentColor; fill: none; }
 
-/* ─── Tiles (homepage/embed) ─────────────────────────────────────────────── */
+/* ─── Tiles (homepage/embed — blog-card style) ──────────────────────────── */
 .ce-tiles-wrap { }
 .ce-tiles {
   display: grid;
   grid-template-columns: repeat(var(--ce-tile-cols, 3), 1fr);
-  gap: 20px;
+  gap: 28px;
 }
 .ce-tile-card {
   display: flex;
@@ -866,95 +866,109 @@
   text-decoration: none;
   color: inherit;
   background: var(--ce-white);
-  border: 1px solid var(--ce-border);
   border-radius: var(--ce-radius);
   overflow: hidden;
-  transition: box-shadow var(--ce-transition), border-color var(--ce-transition), transform var(--ce-transition);
+  box-shadow: var(--ce-shadow);
+  transition: box-shadow .3s ease, transform .3s ease;
 }
 .ce-tile-card:hover {
-  border-color: var(--ce-color);
   box-shadow: var(--ce-shadow-md);
-  transform: translateY(-3px);
+  transform: translateY(-4px);
 }
 
-.ce-tile-card-img { position: relative; overflow: hidden; aspect-ratio: 16/9; }
-.ce-tile-card-img img { width: 100%; height: 100%; object-fit: cover; transition: transform .4s ease; }
-.ce-tile-card:hover .ce-tile-card-img img { transform: scale(1.04); }
+/* Image */
+.ce-tile-card-img { position: relative; overflow: hidden; }
+.ce-tile-card-img img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16/9;
+  object-fit: cover;
+  transition: transform .5s ease;
+}
+.ce-tile-card:hover .ce-tile-card-img img { transform: scale(1.05); }
 .ce-tile-card-img--placeholder { }
 .ce-tile-card-placeholder {
   width: 100%;
-  height: 100%;
+  aspect-ratio: 16/9;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
+/* Body */
 .ce-tile-card-body {
-  padding: 16px;
+  padding: 24px 28px 28px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 0;
   flex: 1;
 }
+
+/* Date label — small caps above the title */
 .ce-tile-card-date {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  background: color-mix(in srgb, var(--ce-color) 12%, transparent);
-  border-radius: var(--ce-radius-sm);
-  padding: 3px 10px;
-  align-self: flex-start;
-}
-.ce-tile-card-day {
-  font-size: 18px;
-  font-weight: 800;
-  color: var(--ce-color);
-  line-height: 1;
-}
-.ce-tile-card-month {
-  font-size: 11px;
-  font-weight: 700;
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: .06em;
   text-transform: uppercase;
-  letter-spacing: .04em;
   color: var(--ce-text-muted);
+  margin-bottom: 10px;
 }
 
+/* Title with underline accent */
 .ce-tile-card-title {
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 700;
   color: var(--ce-text);
   line-height: 1.35;
-  margin: 0;
+  margin: 0 0 12px;
+  padding-bottom: 14px;
+  border-bottom: 3px solid var(--ce-color, var(--ce-primary));
+  display: inline;
+  align-self: flex-start;
 }
 .ce-tile-card:hover .ce-tile-card-title { color: var(--ce-primary); }
 
-.ce-tile-card-meta { display: flex; flex-direction: column; gap: 4px; }
-.ce-tile-card-meta-row {
-  display: flex;
-  align-items: center;
-  gap: 6px;
+/* Time + location meta */
+.ce-tile-card-time,
+.ce-tile-card-location {
+  display: block;
   font-size: 13px;
   color: var(--ce-text-muted);
+  margin-top: 4px;
 }
-.ce-tile-card-meta-row svg { flex-shrink: 0; color: var(--ce-text-muted); }
 
+/* Excerpt */
 .ce-tile-card-excerpt {
-  font-size: 13px;
-  color: var(--ce-text-muted);
-  line-height: 1.5;
-  margin: 0;
+  font-size: 14px;
+  color: var(--ce-text);
+  line-height: 1.65;
+  margin: 14px 0 0;
   display: -webkit-box;
-  -webkit-line-clamp: 2;
+  -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
 
+/* Type badges */
 .ce-tile-card-types {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
-  margin-top: auto;
+  gap: 6px;
+  margin-top: 14px;
 }
+
+/* CTA link */
+.ce-tile-card-cta {
+  display: inline-block;
+  margin-top: auto;
+  padding-top: 18px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ce-primary);
+  letter-spacing: .02em;
+}
+.ce-tile-card:hover .ce-tile-card-cta { text-decoration: underline; }
 
 /* ─── Responsive ─────────────────────────────────────────────────────────── */
 @media (max-width: 1024px) {
