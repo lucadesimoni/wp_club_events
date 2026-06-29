@@ -97,6 +97,74 @@
     }
   });
 
+  /* ─── Sharing ─────────────────────────────────────────────────────────── */
+  var I18N = (window.CE && window.CE.i18n) || {};
+
+  function copyLink(url, onDone) {
+    var done = onDone || function () {};
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(url).then(done).catch(function () { legacyCopy(url); done(); });
+    } else {
+      legacyCopy(url);
+      done();
+    }
+  }
+  function legacyCopy(text) {
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    try { document.execCommand('copy'); } catch (e) {}
+    document.body.removeChild(ta);
+  }
+
+  // Reveal the native share button only where the API exists.
+  if (navigator.share) {
+    document.querySelectorAll('.ce-share-native').forEach(function (b) { b.hidden = false; });
+  }
+
+  // Native share — share card button + tile share icon.
+  document.addEventListener('click', function (e) {
+    var btn = e.target.closest('.ce-share-native, .ce-tile-share-btn');
+    if (!btn) return;
+    e.preventDefault();
+
+    var card = btn.closest('[data-share-url]') || btn;
+    var url   = btn.dataset.shareUrl   || card.dataset.shareUrl   || window.location.href;
+    var title = btn.dataset.shareTitle || card.dataset.shareTitle || document.title;
+
+    if (navigator.share) {
+      navigator.share({ title: title, url: url }).catch(function () {});
+    } else {
+      // No native share (e.g. tile button on desktop) → copy the link.
+      copyLink(url, function () { flashShareLabel(btn); });
+    }
+  });
+
+  // Copy-link button inside the share card.
+  document.addEventListener('click', function (e) {
+    var btn = e.target.closest('.ce-share-copy');
+    if (!btn) return;
+    e.preventDefault();
+    var card = btn.closest('[data-share-url]');
+    var url  = (card && card.dataset.shareUrl) || window.location.href;
+    var label = btn.querySelector('.ce-share-copy-label');
+    copyLink(url, function () {
+      if (!label) return;
+      var orig = label.textContent;
+      label.textContent = I18N.linkCopied || 'Link copied!';
+      btn.classList.add('is-copied');
+      setTimeout(function () { label.textContent = orig; btn.classList.remove('is-copied'); }, 2000);
+    });
+  });
+
+  function flashShareLabel(btn) {
+    btn.classList.add('is-copied');
+    setTimeout(function () { btn.classList.remove('is-copied'); }, 1500);
+  }
+
   /* ─── Animate timeline items on scroll ───────────────────────────────── */
   if ('IntersectionObserver' in window) {
     var style = document.createElement('style');

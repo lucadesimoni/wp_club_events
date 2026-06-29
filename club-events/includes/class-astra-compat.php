@@ -231,6 +231,7 @@ class CE_Astra_Compat {
         /* ── Cards — inherit Astra surface tokens ─────────────────────── */
         .ce-card-item,
         .ce-tile-card,
+        .ce-share-card,
         .ce-timeline-body,
         .ce-sidebar-card,
         .ce-subscribe-wrap,

@@ -958,17 +958,99 @@
   margin-top: 14px;
 }
 
-/* CTA link */
-.ce-tile-card-cta {
-  display: inline-block;
+/* Footer row — CTA + share */
+.ce-tile-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
   margin-top: auto;
   padding-top: 18px;
+}
+.ce-tile-card-cta {
   font-size: 14px;
   font-weight: 700;
   color: var(--ce-primary);
   letter-spacing: .02em;
 }
 .ce-tile-card:hover .ce-tile-card-cta { text-decoration: underline; }
+
+.ce-tile-share-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  border: 1.5px solid var(--ce-border);
+  background: var(--ce-white);
+  color: var(--ce-text-muted);
+  cursor: pointer;
+  transition: all var(--ce-transition);
+}
+.ce-tile-share-btn:hover {
+  border-color: var(--ce-primary);
+  color: var(--ce-primary);
+  background: var(--ce-primary-lt);
+}
+.ce-tile-share-btn.is-copied { border-color: #16a34a; color: #16a34a; background: #f0fdf4; }
+
+/* No-image variant — sleek colored accent bar instead of a picture */
+.ce-tile-card:not(:has(.ce-tile-card-img)) {
+  border-top: 4px solid var(--ce-color, var(--ce-primary));
+}
+.ce-tile-card:not(:has(.ce-tile-card-img)) .ce-tile-card-body {
+  padding-top: 22px;
+}
+
+/* ─── Share card ─────────────────────────────────────────────────────────── */
+.ce-share-card {
+  background: var(--ce-white);
+  border: 1px solid var(--ce-border);
+  border-radius: var(--ce-radius);
+  padding: 20px;
+  box-shadow: var(--ce-shadow);
+}
+.ce-share-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ce-text);
+  margin: 0 0 14px;
+}
+.ce-share-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.ce-share-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 14px;
+  border-radius: 999px;
+  border: 1.5px solid var(--ce-border);
+  background: var(--ce-white);
+  color: var(--ce-text);
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all var(--ce-transition);
+  line-height: 1;
+}
+.ce-share-btn svg { flex-shrink: 0; }
+.ce-share-btn:hover { transform: translateY(-1px); box-shadow: var(--ce-shadow); }
+.ce-share-native   { background: var(--ce-primary); border-color: var(--ce-primary); color: #fff; }
+.ce-share-native:hover { background: var(--ce-primary-dk); }
+.ce-share-whatsapp:hover { border-color: #25d366; color: #128c3e; background: #f0fdf4; }
+.ce-share-facebook:hover { border-color: #1877f2; color: #1877f2; background: #eff6ff; }
+.ce-share-email:hover    { border-color: var(--ce-primary); color: var(--ce-primary); background: var(--ce-primary-lt); }
+.ce-share-copy:hover     { border-color: var(--ce-text); color: var(--ce-text); background: var(--ce-bg); }
+.ce-share-copy.is-copied { border-color: #16a34a; color: #16a34a; background: #f0fdf4; }
+
+/* When stacked into the event sidebar, share sits in its own card. */
+.ce-event-sidebar .ce-share-card { margin-top: 20px; }
 
 /* ─── Responsive ─────────────────────────────────────────────────────────── */
 @media (max-width: 1024px) {
@@ -987,7 +1069,9 @@
   .ce-timeline-item::before { left: 28px; }
   .ce-timeline-dot { margin-left: 22px; }
   .ce-cards-grid { grid-template-columns: repeat(2, 1fr); gap: 16px; }
-  .ce-tiles { grid-template-columns: repeat(2, 1fr); gap: 16px; }
+  .ce-tiles { grid-template-columns: repeat(2, 1fr); gap: 20px; }
+  .ce-tile-card-body { padding: 18px 20px 22px; }
+  .ce-tile-card-title { font-size: 17px; }
 }
 
 @media (max-width: 480px) {
@@ -995,7 +1079,6 @@
   .ce-cal-header, .ce-cal-day-num { font-size: 10px; }
   .ce-event-meta-bar { flex-direction: column; gap: 8px; }
   .ce-cards-grid { grid-template-columns: 1fr; gap: 14px; }
-  .ce-tiles { grid-template-columns: 1fr; gap: 14px; }
   .ce-card-title { padding-right: 0; }
   .ce-card-date-badge { position: static; margin-bottom: 8px; display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; }
   .ce-card-date-day { font-size: 16px; }
@@ -1006,6 +1089,17 @@
   .ce-my-events-table { font-size: 13px; }
   .ce-my-events-table th:nth-child(4),
   .ce-my-events-table td:nth-child(4) { display: none; }
+
+  /* Sleek single-column tiles on phones */
+  .ce-tiles { grid-template-columns: 1fr; gap: 16px; }
+  .ce-tile-card-body { padding: 16px 18px 20px; }
+  .ce-tile-card-title { font-size: 17px; }
+  .ce-tile-card-excerpt { -webkit-line-clamp: 2; }
+
+  /* Share buttons: comfortable tap targets, full-width labels off */
+  .ce-share-buttons { gap: 8px; }
+  .ce-share-btn { flex: 1 1 auto; justify-content: center; padding: 11px 12px; }
+  .ce-tile-share-btn { width: 38px; height: 38px; }
 }
 
 /* ─── Astra Theme Integration ─────────────────────────────────────────────

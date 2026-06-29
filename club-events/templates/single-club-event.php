@@ -170,6 +170,12 @@ if ( $is_astra ) {
                 </div>
             </div>
 
+            <?php
+            $share_url   = get_permalink( $post_id );
+            $share_title = get_the_title( $post_id );
+            echo CE_Shortcodes::share_buttons( $share_url, $share_title );
+            ?>
+
             <?php if ( get_option( 'ce_subscription_enabled', '1' ) === '1' ) : ?>
             <div class="ce-sidebar-card">
                 <?php echo do_shortcode( '[club_events_subscribe]' ); ?>
