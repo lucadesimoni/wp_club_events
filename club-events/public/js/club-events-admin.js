@@ -95,13 +95,27 @@
     if (!btn) return;
     var chip = btn.closest('.ce-type-chip');
     if (!chip) return;
+    var isTheme = chip.dataset.theme === '1';
     document.getElementById('ce-type-term-id').value = chip.dataset.termId;
     document.getElementById('ce-type-name').value = chip.dataset.name;
-    document.getElementById('ce-type-color').value = chip.dataset.color;
+    document.getElementById('ce-type-color').value = chip.dataset.color || '#3b82f6';
+    setThemeColor(isTheme);
     typeFormWrap.hidden = false;
     typeFormTitle.textContent = i18n.edit_type || 'Edit Event Type';
     typeFormWrap.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   });
+
+  // Theme-color checkbox: disable the picker when "use theme" is on.
+  var themeColorCb = document.getElementById('ce-type-theme-color');
+  if (themeColorCb) {
+    themeColorCb.addEventListener('change', function () { setThemeColor(themeColorCb.checked); });
+  }
+  function setThemeColor(on) {
+    var cb = document.getElementById('ce-type-theme-color');
+    var picker = document.getElementById('ce-type-color');
+    if (cb) cb.checked = !!on;
+    if (picker) { picker.disabled = !!on; picker.style.opacity = on ? '.4' : '1'; }
+  }
 
   // Delete event type
   document.addEventListener('click', function (e) {
@@ -129,10 +143,12 @@
       saveBtn.disabled = true;
       saveBtn.textContent = i18n.saving || 'Saving…';
 
+      var themeOn = document.getElementById('ce-type-theme-color');
       var data = {
-        term_id: document.getElementById('ce-type-term-id').value,
-        name:    document.getElementById('ce-type-name').value,
-        color:   document.getElementById('ce-type-color').value
+        term_id:     document.getElementById('ce-type-term-id').value,
+        name:        document.getElementById('ce-type-name').value,
+        color:       document.getElementById('ce-type-color').value,
+        theme_color: (themeOn && themeOn.checked) ? '1' : ''
       };
 
       post('ce_save_event_type', data).then(function (res) {
@@ -154,7 +170,8 @@
             if (existing) {
               existing.dataset.name = d.name;
               existing.dataset.slug = d.slug;
-              existing.dataset.color = d.color;
+              existing.dataset.color = d.is_theme ? '' : d.color;
+              existing.dataset.theme = d.is_theme ? '1' : '0';
               existing.querySelector('.ce-type-dot').style.background = d.color;
               existing.querySelector('.ce-type-name').textContent = d.name;
             }
@@ -178,10 +195,11 @@
     typeForm.reset();
     document.getElementById('ce-type-term-id').value = '';
     document.getElementById('ce-type-color').value = '#3b82f6';
+    setThemeColor(false);
   }
 
   function buildTypeChipHtml(d) {
-    return '<div class="ce-type-chip" data-term-id="' + d.term_id + '" data-name="' + escHtml(d.name) + '" data-slug="' + escHtml(d.slug) + '" data-color="' + escHtml(d.color) + '">'
+    return '<div class="ce-type-chip" data-term-id="' + d.term_id + '" data-name="' + escHtml(d.name) + '" data-slug="' + escHtml(d.slug) + '" data-color="' + escHtml(d.is_theme ? '' : d.color) + '" data-theme="' + (d.is_theme ? '1' : '0') + '">'
       + '<span class="ce-type-dot" style="background:' + escHtml(d.color) + '"></span>'
       + '<span class="ce-type-name">' + escHtml(d.name) + '</span>'
       + '<span class="ce-type-count">0</span>'

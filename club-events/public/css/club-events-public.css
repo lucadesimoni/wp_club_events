@@ -670,6 +670,7 @@
 }
 
 .ce-card-item {
+  position: relative;
   background: var(--ce-white);
   border: 1px solid var(--ce-border);
   border-radius: var(--ce-radius);
@@ -692,6 +693,15 @@
   text-decoration: none;
   color: inherit;
 }
+/* Stretched title link makes the whole card clickable; footer actions sit above. */
+.ce-card-link { color: inherit; text-decoration: none; }
+.ce-card-link::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+.ce-card-footer { position: relative; z-index: 2; }
 
 /* Image / placeholder area */
 .ce-card-img {
@@ -861,6 +871,7 @@
   gap: 28px;
 }
 .ce-tile-card {
+  position: relative;
   display: flex;
   flex-direction: column;
   text-decoration: none;
@@ -874,6 +885,15 @@
 .ce-tile-card:hover {
   box-shadow: var(--ce-shadow-md);
   transform: translateY(-4px);
+}
+/* The title link stretches over the whole card so the card is clickable,
+   while action buttons (z-index above) stay independently clickable. */
+.ce-tile-card-link { color: inherit; text-decoration: none; }
+.ce-tile-card-link::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
 }
 
 /* Image */
@@ -958,8 +978,10 @@
   margin-top: 14px;
 }
 
-/* Footer row — CTA + share */
+/* Footer row — CTA + share/ics. Sits above the stretched title overlay. */
 .ce-tile-card-footer {
+  position: relative;
+  z-index: 2;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -972,29 +994,9 @@
   font-weight: 700;
   color: var(--ce-primary);
   letter-spacing: .02em;
+  text-decoration: none;
 }
 .ce-tile-card:hover .ce-tile-card-cta { text-decoration: underline; }
-
-.ce-tile-share-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 34px;
-  height: 34px;
-  flex-shrink: 0;
-  border-radius: 50%;
-  border: 1.5px solid var(--ce-border);
-  background: var(--ce-white);
-  color: var(--ce-text-muted);
-  cursor: pointer;
-  transition: all var(--ce-transition);
-}
-.ce-tile-share-btn:hover {
-  border-color: var(--ce-primary);
-  color: var(--ce-primary);
-  background: var(--ce-primary-lt);
-}
-.ce-tile-share-btn.is-copied { border-color: #16a34a; color: #16a34a; background: #f0fdf4; }
 
 /* No-image variant — sleek colored accent bar instead of a picture */
 .ce-tile-card:not(:has(.ce-tile-card-img)) {
@@ -1004,30 +1006,24 @@
   padding-top: 22px;
 }
 
-/* ─── Share card ─────────────────────────────────────────────────────────── */
-.ce-share-card {
-  background: var(--ce-white);
-  border: 1px solid var(--ce-border);
-  border-radius: var(--ce-radius);
-  padding: 20px;
-  box-shadow: var(--ce-shadow);
+/* Type badges pick up the event-type colour (falls back to theme primary) */
+.ce-type-badge {
+  background: color-mix(in srgb, var(--ce-color, var(--ce-primary)) 14%, #fff);
+  color: color-mix(in srgb, var(--ce-color, var(--ce-primary)) 78%, #000);
+  border: 1px solid color-mix(in srgb, var(--ce-color, var(--ce-primary)) 30%, transparent);
 }
-.ce-share-title {
-  font-size: 15px;
-  font-weight: 700;
-  color: var(--ce-text);
-  margin: 0 0 14px;
-}
-.ce-share-buttons {
+
+/* ─── Inline action toolbar (ICS + Share) ───────────────────────────────── */
+.ce-actions {
   display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-.ce-share-btn {
-  display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 9px 14px;
+}
+.ce-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 14px;
   border-radius: 999px;
   border: 1.5px solid var(--ce-border);
   background: var(--ce-white);
@@ -1039,18 +1035,58 @@
   transition: all var(--ce-transition);
   line-height: 1;
 }
-.ce-share-btn svg { flex-shrink: 0; }
-.ce-share-btn:hover { transform: translateY(-1px); box-shadow: var(--ce-shadow); }
-.ce-share-native   { background: var(--ce-primary); border-color: var(--ce-primary); color: #fff; }
-.ce-share-native:hover { background: var(--ce-primary-dk); }
-.ce-share-whatsapp:hover { border-color: #25d366; color: #128c3e; background: #f0fdf4; }
-.ce-share-facebook:hover { border-color: #1877f2; color: #1877f2; background: #eff6ff; }
-.ce-share-email:hover    { border-color: var(--ce-primary); color: var(--ce-primary); background: var(--ce-primary-lt); }
-.ce-share-copy:hover     { border-color: var(--ce-text); color: var(--ce-text); background: var(--ce-bg); }
-.ce-share-copy.is-copied { border-color: #16a34a; color: #16a34a; background: #f0fdf4; }
+.ce-action-btn svg { flex-shrink: 0; }
+.ce-action-btn:hover {
+  border-color: var(--ce-primary);
+  color: var(--ce-primary);
+  background: var(--ce-primary-lt);
+}
+/* Compact (icon-only) variant for overview cards/tiles */
+.ce-actions--compact .ce-action-btn {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  justify-content: center;
+  border-radius: 50%;
+  color: var(--ce-text-muted);
+}
+.ce-actions--compact .ce-action-btn:hover { color: var(--ce-primary); }
 
-/* When stacked into the event sidebar, share sits in its own card. */
-.ce-event-sidebar .ce-share-card { margin-top: 20px; }
+/* ─── Share popover ──────────────────────────────────────────────────────── */
+.ce-share-pop {
+  position: absolute;
+  z-index: 9999;
+  min-width: 168px;
+  background: var(--ce-white);
+  border: 1px solid var(--ce-border);
+  border-radius: var(--ce-radius);
+  box-shadow: 0 8px 28px rgba(0,0,0,.16);
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.ce-share-pop-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 9px 12px;
+  border: none;
+  background: none;
+  border-radius: var(--ce-radius-sm);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ce-text);
+  text-decoration: none;
+  cursor: pointer;
+  text-align: left;
+  transition: background var(--ce-transition);
+}
+.ce-share-pop-item:hover { background: var(--ce-bg); }
+.ce-share-pop-item[data-net="whatsapp"]:hover { color: #128c3e; }
+.ce-share-pop-item[data-net="facebook"]:hover { color: #1877f2; }
+.ce-share-pop-item svg { flex-shrink: 0; }
 
 /* ─── Responsive ─────────────────────────────────────────────────────────── */
 @media (max-width: 1024px) {
@@ -1096,10 +1132,10 @@
   .ce-tile-card-title { font-size: 17px; }
   .ce-tile-card-excerpt { -webkit-line-clamp: 2; }
 
-  /* Share buttons: comfortable tap targets, full-width labels off */
-  .ce-share-buttons { gap: 8px; }
-  .ce-share-btn { flex: 1 1 auto; justify-content: center; padding: 11px 12px; }
-  .ce-tile-share-btn { width: 38px; height: 38px; }
+  /* Action buttons: comfortable tap targets */
+  .ce-actions--compact .ce-action-btn { width: 40px; height: 40px; }
+  .ce-share-pop { min-width: 180px; }
+  .ce-share-pop-item { padding: 12px 14px; }
 }
 
 /* ─── Astra Theme Integration ─────────────────────────────────────────────

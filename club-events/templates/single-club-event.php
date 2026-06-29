@@ -162,6 +162,12 @@ if ( $is_astra ) {
                         <svg viewBox="0 0 20 20" width="16" fill="none"><rect x="3" y="4" width="14" height="14" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M7 2v3M13 2v3M3 9h14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M10 12v-2M10 14v.01" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
                         <?php esc_html_e( 'Add to Calendar (.ics)', 'club-events' ); ?>
                     </a>
+                    <button type="button" class="ce-btn ce-btn-outline ce-btn-full ce-action-share"
+                            data-share-url="<?php echo esc_attr( get_permalink( $post_id ) ); ?>"
+                            data-share-title="<?php echo esc_attr( get_the_title( $post_id ) ); ?>">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none"><circle cx="18" cy="5" r="3" stroke="currentColor" stroke-width="1.6"/><circle cx="6" cy="12" r="3" stroke="currentColor" stroke-width="1.6"/><circle cx="18" cy="19" r="3" stroke="currentColor" stroke-width="1.6"/><path d="M8.6 10.6l6.8-4.2M8.6 13.4l6.8 4.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+                        <?php esc_html_e( 'Share', 'club-events' ); ?>
+                    </button>
                     <?php if ( $ext_url ) : ?>
                     <a href="<?php echo esc_url( $ext_url ); ?>" target="_blank" rel="noopener" class="ce-btn ce-btn-primary ce-btn-full">
                         <?php esc_html_e( 'More Information', 'club-events' ); ?> →
@@ -169,12 +175,6 @@ if ( $is_astra ) {
                     <?php endif; ?>
                 </div>
             </div>
-
-            <?php
-            $share_url   = get_permalink( $post_id );
-            $share_title = get_the_title( $post_id );
-            echo CE_Shortcodes::share_buttons( $share_url, $share_title );
-            ?>
 
             <?php if ( get_option( 'ce_subscription_enabled', '1' ) === '1' ) : ?>
             <div class="ce-sidebar-card">

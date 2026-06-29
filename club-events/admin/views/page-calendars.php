@@ -31,6 +31,10 @@
                     <div>
                         <label for="ce-type-color"><?php esc_html_e( 'Color', 'club-events' ); ?></label>
                         <input type="color" id="ce-type-color" name="color" value="#3b82f6">
+                        <label class="ce-checkbox-label" for="ce-type-theme-color" style="margin-top:8px;font-weight:400;text-transform:none;letter-spacing:0;">
+                            <input type="checkbox" id="ce-type-theme-color" name="theme_color" value="1">
+                            <?php esc_html_e( 'Use theme color (Astra)', 'club-events' ); ?>
+                        </label>
                     </div>
                 </div>
                 <div class="ce-form-actions">
@@ -57,8 +61,9 @@
             <div class="ce-type-chip" data-term-id="<?php echo esc_attr( $et->term_id ); ?>"
                  data-name="<?php echo esc_attr( $et->name ); ?>"
                  data-slug="<?php echo esc_attr( $et->slug ); ?>"
-                 data-color="<?php echo esc_attr( $et->color ); ?>">
-                <span class="ce-type-dot" style="background:<?php echo esc_attr( $et->color ); ?>"></span>
+                 data-color="<?php echo esc_attr( $et->color ); ?>"
+                 data-theme="<?php echo $et->is_theme ? '1' : '0'; ?>">
+                <span class="ce-type-dot" style="background:<?php echo esc_attr( $et->display ); ?>"></span>
                 <span class="ce-type-name"><?php echo esc_html( $et->name ); ?></span>
                 <span class="ce-type-count"><?php echo esc_html( $et->count ); ?></span>
                 <button type="button" class="ce-type-edit" title="<?php esc_attr_e( 'Edit', 'club-events' ); ?>">

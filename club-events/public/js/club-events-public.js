@@ -120,50 +120,97 @@
     document.body.removeChild(ta);
   }
 
-  // Reveal the native share button only where the API exists.
-  if (navigator.share) {
-    document.querySelectorAll('.ce-share-native').forEach(function (b) { b.hidden = false; });
+  // Share popover — built once, reused for every share button.
+  var pop = null;
+  function buildPopover() {
+    if (pop) return pop;
+    pop = document.createElement('div');
+    pop.className = 'ce-share-pop';
+    pop.hidden = true;
+    pop.innerHTML =
+      '<a class="ce-share-pop-item" data-net="whatsapp" target="_blank" rel="noopener">' +
+        '<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15l-1.3 4.8 4.9-1.3A10 10 0 1 0 12 2zm0 18a8 8 0 0 1-4.1-1.1l-.3-.2-2.9.8.8-2.8-.2-.3A8 8 0 1 1 12 20zm4.4-6c-.2-.1-1.4-.7-1.6-.8-.2-.1-.4-.1-.5.1-.2.2-.6.8-.7.9-.1.2-.3.2-.5.1-.2-.1-1-.4-1.9-1.2-.7-.6-1.2-1.4-1.3-1.6-.1-.2 0-.4.1-.5l.4-.4c.1-.2.2-.3.2-.5 0-.2 0-.4-.1-.5l-.7-1.7c-.2-.4-.4-.4-.5-.4h-.5c-.2 0-.4.1-.6.3-.2.2-.8.8-.8 1.9 0 1.1.8 2.2.9 2.4.1.2 1.6 2.5 4 3.4.5.2 1 .4 1.3.5.6.2 1.1.1 1.5.1.5-.1 1.4-.6 1.6-1.1.2-.5.2-1 .1-1.1-.1-.1-.2-.1-.4-.2z"/></svg><span>WhatsApp</span></a>' +
+      '<a class="ce-share-pop-item" data-net="facebook" target="_blank" rel="noopener">' +
+        '<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M22 12a10 10 0 1 0-11.6 9.9v-7H7.9V12h2.5V9.8c0-2.5 1.5-3.9 3.8-3.9 1.1 0 2.2.2 2.2.2v2.5h-1.3c-1.2 0-1.6.8-1.6 1.6V12h2.8l-.4 2.9h-2.3v7A10 10 0 0 0 22 12z"/></svg><span>Facebook</span></a>' +
+      '<a class="ce-share-pop-item" data-net="email">' +
+        '<svg viewBox="0 0 24 24" width="18" height="18" fill="none"><rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M4 7l8 6 8-6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg><span>E-Mail</span></a>' +
+      '<button type="button" class="ce-share-pop-item" data-net="copy">' +
+        '<svg viewBox="0 0 24 24" width="18" height="18" fill="none"><rect x="9" y="9" width="11" height="11" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M5 15V5a2 2 0 0 1 2-2h10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg><span class="ce-share-copy-label">' + (I18N.copyLink || 'Link kopieren') + '</span></button>';
+    document.body.appendChild(pop);
+    return pop;
   }
 
-  // Native share — share card button + tile share icon.
+  function closePopover() { if (pop) pop.hidden = true; }
+
+  function openPopover(btn, url, title) {
+    var p = buildPopover();
+    p.querySelector('[data-net="whatsapp"]').href = 'https://wa.me/?text=' + encodeURIComponent(title + ' ' + url);
+    p.querySelector('[data-net="facebook"]').href = 'https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(url);
+    p.querySelector('[data-net="email"]').href    = 'mailto:?subject=' + encodeURIComponent(title) + '&body=' + encodeURIComponent(title + '\n\n' + url);
+    p._url = url;
+
+    p.hidden = false;
+    var r = btn.getBoundingClientRect();
+    var pw = p.offsetWidth, ph = p.offsetHeight;
+    var top = r.bottom + window.scrollY + 8;
+    var left = r.left + window.scrollX;
+    // Keep within viewport horizontally.
+    if (left + pw > window.scrollX + document.documentElement.clientWidth - 8) {
+      left = r.right + window.scrollX - pw;
+    }
+    if (left < window.scrollX + 8) left = window.scrollX + 8;
+    // Flip above if no room below.
+    if (r.bottom + ph + 8 > document.documentElement.clientHeight) {
+      top = r.top + window.scrollY - ph - 8;
+    }
+    p.style.top = top + 'px';
+    p.style.left = left + 'px';
+  }
+
+  // Share trigger — native where available, popover otherwise.
   document.addEventListener('click', function (e) {
-    var btn = e.target.closest('.ce-share-native, .ce-tile-share-btn');
+    var btn = e.target.closest('.ce-action-share');
     if (!btn) return;
     e.preventDefault();
+    e.stopPropagation();
 
-    var card = btn.closest('[data-share-url]') || btn;
-    var url   = btn.dataset.shareUrl   || card.dataset.shareUrl   || window.location.href;
-    var title = btn.dataset.shareTitle || card.dataset.shareTitle || document.title;
+    var url   = btn.dataset.shareUrl   || window.location.href;
+    var title = btn.dataset.shareTitle || document.title;
 
     if (navigator.share) {
       navigator.share({ title: title, url: url }).catch(function () {});
     } else {
-      // No native share (e.g. tile button on desktop) → copy the link.
-      copyLink(url, function () { flashShareLabel(btn); });
+      if (pop && !pop.hidden) { closePopover(); return; }
+      openPopover(btn, url, title);
     }
   });
 
-  // Copy-link button inside the share card.
+  // Popover item clicks (copy handled here; links navigate natively).
   document.addEventListener('click', function (e) {
-    var btn = e.target.closest('.ce-share-copy');
-    if (!btn) return;
-    e.preventDefault();
-    var card = btn.closest('[data-share-url]');
-    var url  = (card && card.dataset.shareUrl) || window.location.href;
-    var label = btn.querySelector('.ce-share-copy-label');
-    copyLink(url, function () {
-      if (!label) return;
-      var orig = label.textContent;
-      label.textContent = I18N.linkCopied || 'Link copied!';
-      btn.classList.add('is-copied');
-      setTimeout(function () { label.textContent = orig; btn.classList.remove('is-copied'); }, 2000);
-    });
+    var item = e.target.closest('.ce-share-pop-item');
+    if (!item) return;
+    if (item.dataset.net === 'copy') {
+      e.preventDefault();
+      var label = item.querySelector('.ce-share-copy-label');
+      copyLink(pop._url || window.location.href, function () {
+        if (!label) return;
+        var orig = label.textContent;
+        label.textContent = I18N.linkCopied || 'Link copied!';
+        setTimeout(function () { label.textContent = orig; closePopover(); }, 1200);
+      });
+    } else {
+      closePopover();
+    }
   });
 
-  function flashShareLabel(btn) {
-    btn.classList.add('is-copied');
-    setTimeout(function () { btn.classList.remove('is-copied'); }, 1500);
-  }
+  // Dismiss popover on outside click / escape / scroll.
+  document.addEventListener('click', function (e) {
+    if (!pop || pop.hidden) return;
+    if (e.target.closest('.ce-share-pop') || e.target.closest('.ce-action-share')) return;
+    closePopover();
+  });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closePopover(); });
+  window.addEventListener('scroll', closePopover, true);
 
   /* ─── Animate timeline items on scroll ───────────────────────────────── */
   if ('IntersectionObserver' in window) {

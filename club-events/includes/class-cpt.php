@@ -340,24 +340,45 @@ class CE_CPT {
         return get_posts( $query_args );
     }
 
+    /**
+     * Resolve an event type's colour as a CSS-usable value.
+     *
+     * Returns the stored `_ce_color` term meta when set; otherwise falls back
+     * to the Astra-bridged theme primary (`var(--ce-primary)`), which itself
+     * resolves to the plugin default when Astra is not active. This guarantees
+     * every event type always renders with a colour.
+     */
+    public static function type_color( $term_id ) {
+        $color = get_term_meta( (int) $term_id, '_ce_color', true );
+        return $color ? $color : 'var(--ce-primary)';
+    }
+
     public static function format_event( $post_id ) {
         $post     = get_post( $post_id );
         $start    = get_post_meta( $post_id, '_ce_start_date', true );
         $end      = get_post_meta( $post_id, '_ce_end_date', true );
         $all_day  = get_post_meta( $post_id, '_ce_all_day', true );
-        $color    = get_post_meta( $post_id, '_ce_color', true ) ?: '#3b82f6';
+        $color    = get_post_meta( $post_id, '_ce_color', true );
         $location = get_post_meta( $post_id, '_ce_location', true );
         $loc_url  = get_post_meta( $post_id, '_ce_location_url', true );
         $ext_url  = get_post_meta( $post_id, '_ce_external_url', true );
 
         $cats  = wp_get_post_terms( $post_id, 'event_category', [ 'fields' => 'all' ] );
         $types = wp_get_post_terms( $post_id, 'event_type', [ 'fields' => 'all' ] );
+        $types = is_wp_error( $types ) ? [] : $types;
+
+        // Colour resolution: explicit event colour → first type colour →
+        // Astra theme primary. Every event therefore always has a colour.
+        if ( ! $color ) {
+            $color = ! empty( $types ) ? self::type_color( $types[0]->term_id ) : 'var(--ce-primary)';
+        }
 
         return [
             'id'          => $post_id,
             'title'       => $post->post_title,
             'excerpt'     => wp_strip_all_tags( $post->post_excerpt ?: wp_trim_words( $post->post_content, 20 ) ),
             'url'         => get_permalink( $post_id ),
+            'ics'         => class_exists( 'CE_ICS_Export' ) ? CE_ICS_Export::get_single_url( $post_id ) : '',
             'thumbnail'   => get_the_post_thumbnail_url( $post_id, 'medium' ),
             'start'       => $start,
             'end'         => $end,
@@ -367,7 +388,7 @@ class CE_CPT {
             'locationUrl' => $loc_url,
             'externalUrl' => $ext_url,
             'categories'  => array_map( fn( $t ) => [ 'id' => $t->term_id, 'name' => $t->name, 'slug' => $t->slug ], is_wp_error( $cats ) ? [] : $cats ),
-            'types'       => array_map( fn( $t ) => [ 'id' => $t->term_id, 'name' => $t->name, 'slug' => $t->slug ], is_wp_error( $types ) ? [] : $types ),
+            'types'       => array_map( fn( $t ) => [ 'id' => $t->term_id, 'name' => $t->name, 'slug' => $t->slug, 'color' => self::type_color( $t->term_id ) ], $types ),
         ];
     }
 }

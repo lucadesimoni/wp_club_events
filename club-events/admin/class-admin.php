@@ -175,9 +175,13 @@ class CE_Admin {
             wp_send_json_error( 'Insufficient permissions.' );
         }
 
-        $term_id = (int) ( $_POST['term_id'] ?? 0 );
-        $name    = sanitize_text_field( $_POST['name'] ?? '' );
-        $color   = sanitize_hex_color( $_POST['color'] ?? '' ) ?: '#3b82f6';
+        $term_id     = (int) ( $_POST['term_id'] ?? 0 );
+        $name        = sanitize_text_field( $_POST['name'] ?? '' );
+        $use_theme   = ! empty( $_POST['theme_color'] );
+        // Empty stored colour = "use theme" → frontend resolves to var(--ce-primary).
+        $color       = $use_theme ? '' : ( sanitize_hex_color( $_POST['color'] ?? '' ) ?: '#3b82f6' );
+        // What the frontend/admin should render for this type right now.
+        $display     = $color ?: 'var(--ce-primary)';
 
         if ( empty( $name ) ) {
             wp_send_json_error( __( 'Name is required.', 'club-events' ) );
@@ -191,12 +195,13 @@ class CE_Admin {
             update_term_meta( $term_id, '_ce_color', $color );
             $term = get_term( $term_id, 'event_type' );
             wp_send_json_success( [
-                'action'  => 'updated',
-                'term_id' => $term_id,
-                'name'    => $term->name,
-                'slug'    => $term->slug,
-                'color'   => $color,
-                'count'   => $term->count,
+                'action'   => 'updated',
+                'term_id'  => $term_id,
+                'name'     => $term->name,
+                'slug'     => $term->slug,
+                'color'    => $display,
+                'is_theme' => $use_theme,
+                'count'    => $term->count,
             ] );
         } else {
             $result = wp_insert_term( $name, 'event_type' );
@@ -207,12 +212,13 @@ class CE_Admin {
             update_term_meta( $new_id, '_ce_color', $color );
             $term = get_term( $new_id, 'event_type' );
             wp_send_json_success( [
-                'action'  => 'created',
-                'term_id' => $new_id,
-                'name'    => $term->name,
-                'slug'    => $term->slug,
-                'color'   => $color,
-                'count'   => 0,
+                'action'   => 'created',
+                'term_id'  => $new_id,
+                'name'     => $term->name,
+                'slug'     => $term->slug,
+                'color'    => $display,
+                'is_theme' => $use_theme,
+                'count'    => 0,
             ] );
         }
     }
@@ -250,7 +256,12 @@ class CE_Admin {
             $event_types = [];
         }
         foreach ( $event_types as $et ) {
-            $et->color = get_term_meta( $et->term_id, '_ce_color', true ) ?: '#3b82f6';
+            $raw            = get_term_meta( $et->term_id, '_ce_color', true );
+            $et->is_theme   = empty( $raw );
+            // Stored colour for the picker; theme types fall back to the plugin
+            // default in wp-admin (Astra vars aren't loaded here).
+            $et->color      = $raw ?: '';
+            $et->display    = $raw ?: 'var(--ce-primary)';
         }
         require CE_PLUGIN_DIR . 'admin/views/page-calendars.php';
     }

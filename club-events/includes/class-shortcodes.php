@@ -95,6 +95,8 @@ class CE_Shortcodes {
                 'show_location' => [ 'type' => 'boolean', 'default' => false ],
                 'show_time'     => [ 'type' => 'boolean', 'default' => false ],
                 'show_types'    => [ 'type' => 'boolean', 'default' => false ],
+                'show_share'    => [ 'type' => 'boolean', 'default' => false ],
+                'show_ics'      => [ 'type' => 'boolean', 'default' => false ],
                 'cta'           => [ 'type' => 'string',  'default' => 'Weiterlesen' ],
             ],
         ] ) );
@@ -228,7 +230,7 @@ class CE_Shortcodes {
                                     <span class="ce-meta-item ce-category-badge"><?php echo esc_html( $cat['name'] ); ?></span>
                                     <?php endforeach; ?>
                                     <?php foreach ( $event['types'] as $type ) : ?>
-                                    <span class="ce-meta-item ce-type-badge"><?php echo esc_html( $type['name'] ); ?></span>
+                                    <span class="ce-meta-item ce-type-badge" style="--ce-color:<?php echo esc_attr( $type['color'] ); ?>"><?php echo esc_html( $type['name'] ); ?></span>
                                     <?php endforeach; ?>
                                 </div>
                                 <?php if ( $event['excerpt'] ) : ?>
@@ -238,10 +240,16 @@ class CE_Shortcodes {
                                     <a href="<?php echo esc_url( $event['url'] ); ?>" class="ce-btn ce-btn-primary">
                                         <?php esc_html_e( 'Details', 'club-events' ); ?>
                                     </a>
-                                    <a href="<?php echo esc_url( CE_ICS_Export::get_single_url( $event['id'] ) ); ?>" class="ce-btn ce-btn-outline">
+                                    <a href="<?php echo esc_url( $event['ics'] ); ?>" class="ce-btn ce-btn-outline">
                                         <svg viewBox="0 0 16 16" width="14" height="14"><rect x="2" y="3" width="12" height="12" rx="1.5" stroke="currentColor" fill="none"/><path d="M5 2v2M11 2v2M2 7h12" stroke="currentColor" stroke-linecap="round"/></svg>
                                         <?php esc_html_e( 'Add to Calendar', 'club-events' ); ?>
                                     </a>
+                                    <button type="button" class="ce-btn ce-btn-outline ce-action-share"
+                                            data-share-url="<?php echo esc_attr( $event['url'] ); ?>"
+                                            data-share-title="<?php echo esc_attr( $event['title'] ); ?>">
+                                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none"><circle cx="18" cy="5" r="3" stroke="currentColor" stroke-width="1.6"/><circle cx="6" cy="12" r="3" stroke="currentColor" stroke-width="1.6"/><circle cx="18" cy="19" r="3" stroke="currentColor" stroke-width="1.6"/><path d="M8.6 10.6l6.8-4.2M8.6 13.4l6.8 4.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+                                        <?php esc_html_e( 'Share', 'club-events' ); ?>
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -521,7 +529,7 @@ class CE_Shortcodes {
                          data-category="<?php echo esc_attr( $filter_slugs ); ?>"
                          style="--ce-color:<?php echo esc_attr( $event['color'] ); ?>">
 
-                    <a href="<?php echo esc_url( $event['url'] ); ?>" class="ce-card-inner">
+                    <div class="ce-card-inner">
 
                         <?php if ( ! empty( $atts['show_image'] ) && $event['thumbnail'] ) : ?>
                         <div class="ce-card-img">
@@ -563,7 +571,7 @@ class CE_Shortcodes {
                             </div>
                             <?php endif; ?>
 
-                            <h3 class="ce-card-title"><?php echo esc_html( $event['title'] ); ?></h3>
+                            <h3 class="ce-card-title"><a href="<?php echo esc_url( $event['url'] ); ?>" class="ce-card-link"><?php echo esc_html( $event['title'] ); ?></a></h3>
 
                             <div class="ce-card-meta">
                                 <?php if ( $weekday && $time_start ) : ?>
@@ -593,22 +601,21 @@ class CE_Shortcodes {
                             <?php if ( ! empty( $event['types'] ) ) : ?>
                             <div class="ce-card-type-badges">
                                 <?php foreach ( $event['types'] as $type ) : ?>
-                                <span class="ce-type-badge"><?php echo esc_html( $type['name'] ); ?></span>
+                                <span class="ce-type-badge" style="--ce-color:<?php echo esc_attr( $type['color'] ); ?>"><?php echo esc_html( $type['name'] ); ?></span>
                                 <?php endforeach; ?>
                             </div>
                             <?php endif; ?>
 
                             <div class="ce-card-footer">
                                 <span class="ce-card-cta"><?php esc_html_e( 'More details', 'club-events' ); ?> →</span>
-                                <a href="<?php echo esc_url( CE_ICS_Export::get_single_url( $event['id'] ) ); ?>"
-                                   class="ce-card-ics"
-                                   onclick="event.stopPropagation()"
-                                   title="<?php esc_attr_e( 'Add to Calendar', 'club-events' ); ?>">
-                                    <svg viewBox="0 0 16 16" width="14" height="14" fill="none"><rect x="2" y="3" width="12" height="11" rx="1.5" stroke="currentColor" stroke-width="1.2"/><path d="M5 2v2M11 2v2M2 7h12" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><path d="M8 10V8M8 12v.01" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
-                                </a>
+                                <?php echo self::event_actions( $event['url'], $event['title'], $event['ics'], [
+                                    'labels' => false,
+                                    'stop'   => true,
+                                    'class'  => 'ce-actions--compact',
+                                ] ); ?>
                             </div>
                         </div>
-                    </a>
+                    </div>
                 </article>
                 <?php endforeach; ?>
             </div>
@@ -734,6 +741,7 @@ class CE_Shortcodes {
             'show_time'     => false,
             'show_types'    => false,
             'show_share'    => false,
+            'show_ics'      => false,
             'cta'           => __( 'Weiterlesen', 'club-events' ),
         ], $atts, 'club_events_tiles' );
 
@@ -772,7 +780,7 @@ class CE_Shortcodes {
                     $time_start = ( $start_ts && ! $event['allDay'] ) ? date_i18n( get_option( 'time_format' ), $start_ts ) : '';
                     $time_end   = ( $end_ts   && ! $event['allDay'] ) ? date_i18n( get_option( 'time_format' ), $end_ts )   : '';
                 ?>
-                <a href="<?php echo esc_url( $event['url'] ); ?>" class="ce-tile-card"
+                <div class="ce-tile-card"
                    style="--ce-color:<?php echo esc_attr( $event['color'] ); ?>">
 
                     <?php if ( ! empty( $atts['show_image'] ) && $event['thumbnail'] ) : ?>
@@ -798,7 +806,9 @@ class CE_Shortcodes {
                         <span class="ce-tile-card-date"><?php echo esc_html( strtoupper( $date_label ) ); ?></span>
                         <?php endif; ?>
 
-                        <h3 class="ce-tile-card-title"><?php echo esc_html( $event['title'] ); ?></h3>
+                        <h3 class="ce-tile-card-title">
+                            <a href="<?php echo esc_url( $event['url'] ); ?>" class="ce-tile-card-link"><?php echo esc_html( $event['title'] ); ?></a>
+                        </h3>
 
                         <?php if ( ! empty( $atts['show_time'] ) && $time_start ) : ?>
                         <span class="ce-tile-card-time"><?php echo esc_html( $time_start ); ?><?php echo $time_end ? ' – ' . esc_html( $time_end ) : ''; ?></span>
@@ -815,29 +825,29 @@ class CE_Shortcodes {
                         <?php if ( ! empty( $atts['show_types'] ) && ! empty( $event['types'] ) ) : ?>
                         <div class="ce-tile-card-types">
                             <?php foreach ( $event['types'] as $type ) : ?>
-                            <span class="ce-type-badge"><?php echo esc_html( $type['name'] ); ?></span>
+                            <span class="ce-type-badge" style="--ce-color:<?php echo esc_attr( $type['color'] ); ?>"><?php echo esc_html( $type['name'] ); ?></span>
                             <?php endforeach; ?>
                         </div>
                         <?php endif; ?>
 
-                        <?php if ( $atts['cta'] || ! empty( $atts['show_share'] ) ) : ?>
+                        <?php $show_actions = ! empty( $atts['show_share'] ) || ! empty( $atts['show_ics'] ); ?>
+                        <?php if ( $atts['cta'] || $show_actions ) : ?>
                         <div class="ce-tile-card-footer">
                             <?php if ( $atts['cta'] ) : ?>
-                            <span class="ce-tile-card-cta"><?php echo esc_html( $atts['cta'] ); ?> →</span>
+                            <a href="<?php echo esc_url( $event['url'] ); ?>" class="ce-tile-card-cta"><?php echo esc_html( $atts['cta'] ); ?> →</a>
                             <?php endif; ?>
-                            <?php if ( ! empty( $atts['show_share'] ) ) : ?>
-                            <button type="button" class="ce-tile-share-btn"
-                                    data-share-url="<?php echo esc_attr( $event['url'] ); ?>"
-                                    data-share-title="<?php echo esc_attr( $event['title'] ); ?>"
-                                    onclick="event.preventDefault();event.stopPropagation();"
-                                    aria-label="<?php esc_attr_e( 'Share', 'club-events' ); ?>">
-                                <svg viewBox="0 0 24 24" width="16" height="16" fill="none"><circle cx="18" cy="5" r="3" stroke="currentColor" stroke-width="1.6"/><circle cx="6" cy="12" r="3" stroke="currentColor" stroke-width="1.6"/><circle cx="18" cy="19" r="3" stroke="currentColor" stroke-width="1.6"/><path d="M8.6 10.6l6.8-4.2M8.6 13.4l6.8 4.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
-                            </button>
+                            <?php if ( $show_actions ) : ?>
+                            <?php echo self::event_actions( $event['url'], $event['title'], $event['ics'], [
+                                'ics'    => ! empty( $atts['show_ics'] ),
+                                'share'  => ! empty( $atts['show_share'] ),
+                                'labels' => false,
+                                'class'  => 'ce-actions--compact',
+                            ] ); ?>
                             <?php endif; ?>
                         </div>
                         <?php endif; ?>
                     </div>
-                </a>
+                </div>
                 <?php endforeach; ?>
             </div>
             <?php endif; ?>
@@ -847,48 +857,53 @@ class CE_Shortcodes {
     }
 
     /**
-     * Reusable share card — native Web Share API with WhatsApp / Facebook /
-     * Email / Copy-link fallbacks. Used on the single event template and
-     * available via the [club_events_share] shortcode.
+     * Compact inline action toolbar — "Add to calendar (.ics)" + "Share".
+     *
+     * Used inline on overview listings (tiles/cards/timeline/list) and on the
+     * single event page. Sharing uses the native Web Share API on supporting
+     * devices and a lightweight popover (WhatsApp / Facebook / Email / Copy)
+     * elsewhere — no separate share card. Pass $args to toggle each action,
+     * choose icon-only vs labelled, and add extra classes.
      */
-    public static function share_buttons( $url, $title, $heading = '' ) {
-        $url     = esc_url_raw( $url );
-        $title   = wp_strip_all_tags( $title );
-        $heading = $heading ?: __( 'Share this event', 'club-events' );
+    public static function event_actions( $url, $title, $ics = '', $args = [] ) {
+        $args = wp_parse_args( $args, [
+            'ics'     => true,
+            'share'   => true,
+            'labels'  => true,   // false = icon-only (compact)
+            'class'   => '',
+            'stop'    => false,  // true when nested inside a clickable card <a>
+        ] );
 
-        $enc_url   = rawurlencode( $url );
-        $enc_title = rawurlencode( $title );
+        $url   = esc_url_raw( $url );
+        $title = wp_strip_all_tags( $title );
+        $stop  = $args['stop'] ? 'event.stopPropagation();' : '';
 
-        $wa_url = 'https://wa.me/?text=' . rawurlencode( $title . ' ' . $url );
-        $fb_url = 'https://www.facebook.com/sharer/sharer.php?u=' . $enc_url;
-        $mail   = 'mailto:?subject=' . $enc_title . '&body=' . rawurlencode( $title . "\n\n" . $url );
+        $share_svg = '<svg viewBox="0 0 24 24" width="17" height="17" fill="none"><circle cx="18" cy="5" r="3" stroke="currentColor" stroke-width="1.6"/><circle cx="6" cy="12" r="3" stroke="currentColor" stroke-width="1.6"/><circle cx="18" cy="19" r="3" stroke="currentColor" stroke-width="1.6"/><path d="M8.6 10.6l6.8-4.2M8.6 13.4l6.8 4.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>';
+        $ics_svg   = '<svg viewBox="0 0 24 24" width="17" height="17" fill="none"><rect x="4" y="5" width="16" height="16" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M8 3v4M16 3v4M4 10h16" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M12 17v-4M10 15h4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>';
 
         ob_start();
         ?>
-        <div class="ce-share-card" data-ce-share data-share-url="<?php echo esc_attr( $url ); ?>" data-share-title="<?php echo esc_attr( $title ); ?>">
-            <h3 class="ce-share-title"><?php echo esc_html( $heading ); ?></h3>
-            <div class="ce-share-buttons">
-                <button type="button" class="ce-share-btn ce-share-native" hidden aria-label="<?php esc_attr_e( 'Share', 'club-events' ); ?>">
-                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none"><circle cx="18" cy="5" r="3" stroke="currentColor" stroke-width="1.6"/><circle cx="6" cy="12" r="3" stroke="currentColor" stroke-width="1.6"/><circle cx="18" cy="19" r="3" stroke="currentColor" stroke-width="1.6"/><path d="M8.6 10.6l6.8-4.2M8.6 13.4l6.8 4.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
-                    <span><?php esc_html_e( 'Share', 'club-events' ); ?></span>
-                </button>
-                <a href="<?php echo esc_url( $wa_url ); ?>" target="_blank" rel="noopener" class="ce-share-btn ce-share-whatsapp" aria-label="WhatsApp">
-                    <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15l-1.3 4.8 4.9-1.3A10 10 0 1 0 12 2zm0 18a8 8 0 0 1-4.1-1.1l-.3-.2-2.9.8.8-2.8-.2-.3A8 8 0 1 1 12 20zm4.4-6c-.2-.1-1.4-.7-1.6-.8-.2-.1-.4-.1-.5.1-.2.2-.6.8-.7.9-.1.2-.3.2-.5.1-.2-.1-1-.4-1.9-1.2-.7-.6-1.2-1.4-1.3-1.6-.1-.2 0-.4.1-.5l.4-.4c.1-.2.2-.3.2-.5 0-.2 0-.4-.1-.5l-.7-1.7c-.2-.4-.4-.4-.5-.4h-.5c-.2 0-.4.1-.6.3-.2.2-.8.8-.8 1.9 0 1.1.8 2.2.9 2.4.1.2 1.6 2.5 4 3.4.5.2 1 .4 1.3.5.6.2 1.1.1 1.5.1.5-.1 1.4-.6 1.6-1.1.2-.5.2-1 .1-1.1-.1-.1-.2-.1-.4-.2z"/></svg>
-                    <span>WhatsApp</span>
-                </a>
-                <a href="<?php echo esc_url( $fb_url ); ?>" target="_blank" rel="noopener" class="ce-share-btn ce-share-facebook" aria-label="Facebook">
-                    <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M22 12a10 10 0 1 0-11.6 9.9v-7H7.9V12h2.5V9.8c0-2.5 1.5-3.9 3.8-3.9 1.1 0 2.2.2 2.2.2v2.5h-1.3c-1.2 0-1.6.8-1.6 1.6V12h2.8l-.4 2.9h-2.3v7A10 10 0 0 0 22 12z"/></svg>
-                    <span>Facebook</span>
-                </a>
-                <a href="<?php echo esc_url( $mail ); ?>" class="ce-share-btn ce-share-email" aria-label="Email">
-                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none"><rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M4 7l8 6 8-6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
-                    <span>E-Mail</span>
-                </a>
-                <button type="button" class="ce-share-btn ce-share-copy" aria-label="<?php esc_attr_e( 'Copy link', 'club-events' ); ?>">
-                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none"><rect x="9" y="9" width="11" height="11" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M5 15V5a2 2 0 0 1 2-2h10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
-                    <span class="ce-share-copy-label"><?php esc_html_e( 'Copy link', 'club-events' ); ?></span>
-                </button>
-            </div>
+        <div class="ce-actions<?php echo $args['class'] ? ' ' . esc_attr( $args['class'] ) : ''; ?>">
+            <?php if ( $args['ics'] && $ics ) : ?>
+            <a href="<?php echo esc_url( $ics ); ?>" class="ce-action-btn ce-action-ics"
+               title="<?php esc_attr_e( 'Add to calendar', 'club-events' ); ?>"
+               aria-label="<?php esc_attr_e( 'Add to calendar', 'club-events' ); ?>"
+               <?php if ( $stop ) echo 'onclick="' . esc_attr( $stop ) . '"'; ?>>
+                <?php echo $ics_svg; ?>
+                <?php if ( $args['labels'] ) : ?><span class="ce-action-label"><?php esc_html_e( 'Add to calendar', 'club-events' ); ?></span><?php endif; ?>
+            </a>
+            <?php endif; ?>
+            <?php if ( $args['share'] ) : ?>
+            <button type="button" class="ce-action-btn ce-action-share"
+                    data-share-url="<?php echo esc_attr( $url ); ?>"
+                    data-share-title="<?php echo esc_attr( $title ); ?>"
+                    title="<?php esc_attr_e( 'Share', 'club-events' ); ?>"
+                    aria-label="<?php esc_attr_e( 'Share', 'club-events' ); ?>"
+                    onclick="event.preventDefault();<?php echo esc_attr( $stop ); ?>">
+                <?php echo $share_svg; ?>
+                <?php if ( $args['labels'] ) : ?><span class="ce-action-label"><?php esc_html_e( 'Share', 'club-events' ); ?></span><?php endif; ?>
+            </button>
+            <?php endif; ?>
         </div>
         <?php
         return ob_get_clean();
@@ -897,15 +912,22 @@ class CE_Shortcodes {
     public function share( $atts = [] ) {
         $atts = is_array( $atts ) ? $atts : [];
         $atts = shortcode_atts( [
-            'url'     => '',
-            'title'   => '',
-            'heading' => '',
+            'url'    => '',
+            'title'  => '',
+            'ics'    => '',
+            'labels' => 'true',
         ], $atts, 'club_events_share' );
 
         $url   = $atts['url']   ?: ( is_singular() ? get_permalink() : home_url( add_query_arg( [] ) ) );
         $title = $atts['title'] ?: ( is_singular() ? get_the_title() : get_bloginfo( 'name' ) );
+        $ics   = $atts['ics'];
+        if ( ! $ics && is_singular( 'club_event' ) && class_exists( 'CE_ICS_Export' ) ) {
+            $ics = CE_ICS_Export::get_single_url( get_the_ID() );
+        }
 
-        return self::share_buttons( $url, $title, $atts['heading'] );
+        return self::event_actions( $url, $title, $ics, [
+            'labels' => 'false' !== $atts['labels'],
+        ] );
     }
 
     public function subscribe_form( $atts = [] ) {

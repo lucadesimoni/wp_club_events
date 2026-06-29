@@ -89,6 +89,7 @@ class CE_Plugin {
                 'subscribed'  => __( 'Subscribed!', 'club-events' ),
                 'addToCalendar' => __( 'Add to Calendar', 'club-events' ),
                 'share'       => __( 'Share', 'club-events' ),
+                'copyLink'    => __( 'Copy link', 'club-events' ),
                 'linkCopied'  => __( 'Link copied!', 'club-events' ),
             ],
         ] );
